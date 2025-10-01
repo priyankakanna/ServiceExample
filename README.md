@@ -14,3 +14,12 @@ Aspire__StackExchange__Redis__ConnectionString="redis:6379"
 Aspire__NATS__Net__ConnectionString="nats://nats:4222"
 
 Where mongo, redis and nats are the service names in the k8s cluster.
+
+Dockerfile is provided to build the image. 
+Also, docker-compose.yml is provided to run it locally with required dependencies.
+
+To test API locally, this URL can be used:
+http://localhost:9080/swagger/index.html
+
+This API enpoint should be available: 
+http://localhost:9080/api/Person
