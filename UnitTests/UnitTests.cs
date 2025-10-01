@@ -21,7 +21,7 @@ public class UnitTests
     {
         var persons = _fixture.CreateMany<Person>(5).ToList();
 
-        var logger = new Mock<ILogger>();
+        var logger = new Mock<ILogger<PersonController>>();
         var mockCacheDb = new Mock<IDatabase>();
         mockCacheDb.Setup(db => db.StringGetAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
             .ReturnsAsync(new RedisValue(JsonSerializer.Serialize(persons)));
