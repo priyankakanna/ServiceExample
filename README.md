@@ -9,7 +9,7 @@ This service sample demonstrates how to use .NET Web API service with:
 Service sends and receives person messages using NATS messaging system, stores them in MongoDB, and caches list requests in Redis for improved performance.
 
 # To run it in k8s those environment variables must be set:
-Aspire__MongoDB__ConnectionString="mongodb://mongo:27017"
+Aspire__MongoDB__Driver__ConnectionString="mongodb://mongo:27017"
 Aspire__StackExchange__Redis__ConnectionString="redis:6379"
 Aspire__NATS__Net__ConnectionString="nats://nats:4222"
 
