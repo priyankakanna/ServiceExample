@@ -26,10 +26,9 @@
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_HTTPS_PORTS": "9080",
-        "ASPNETCORE_HTTP_PORTS": "9081"
       },
       "publishAllPorts": true,
-      "useSSL": true
+      "useSSL": false
     }
   },
   "$schema": "https://json.schemastore.org/launchsettings.json"

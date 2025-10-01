@@ -5,7 +5,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 USER $APP_UID
 WORKDIR /app
 EXPOSE 9080
-EXPOSE 9081
 
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
@@ -22,6 +21,6 @@ RUN dotnet publish "./ServiceExample.csproj" -c Release -o /app/publish /p:UseAp
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
 WORKDIR /app
-ENV ASPNETCORE_URLS=http://+:9080;https://+:9081
+ENV ASPNETCORE_URLS=http://+:9080
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "ServiceExample.dll"]
