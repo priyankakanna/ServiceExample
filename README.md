@@ -15,6 +15,9 @@ Aspire__NATS__Net__ConnectionString="nats://nats:4222"
 
 Where mongo, redis and nats are the service names in the k8s cluster.
 
+# To run unit tests navigate to the solution folder and run:
+dotnet test
+
 # To test API locally, this URL can be used:
 http://localhost:9080/swagger/index.html
 
