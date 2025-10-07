@@ -14,7 +14,7 @@ stages:
       - job: Build
         pool:
           name: SelfHostedPool
-        timeoutInMinutes: 5  # Force timeout after 5 minutes
+        timeoutInMinutes: 8
         steps:
           - checkout: self
             displayName: 'Checkout source code'
@@ -28,11 +28,22 @@ stages:
           - script: dotnet test --configuration Release --verbosity minimal
             displayName: 'Run Unit Tests'
 
+          # 🔥 SEPARATE BUILD STEP
           - task: Docker@2
-            displayName: 'Build and Push Docker Image'
+            displayName: 'Build Docker Image'
             inputs:
-              command: 'buildAndPush'
               containerRegistry: 'serviceexampleacr'
               repository: '$(IMAGE_NAME)'
+              command: 'build'
               dockerfile: 'Dockerfile'
+              tags: $(TAG)
+              arguments: '--progress=plain'
+
+          # 🔥 SEPARATE PUSH STEP  
+          - task: Docker@2
+            displayName: 'Push Docker Image'
+            inputs:
+              containerRegistry: 'serviceexampleacr'
+              repository: '$(IMAGE_NAME)'
+              command: 'push'
               tags: $(TAG)
