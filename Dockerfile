@@ -2,32 +2,31 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# 1️⃣ Copy solution and project files first for caching
+# 1️⃣ Copy solution and project files separately for caching
 COPY ServiceExample.sln .
 COPY ServiceExample/*.csproj ./ServiceExample/
 COPY UnitTests/*.csproj ./UnitTests/
 
-# 2️⃣ Restore dependencies (cached if csproj files don't change)
+# 2️⃣ Restore dependencies (layer will cache unless csproj changes)
 RUN dotnet restore
 
-# 3️⃣ Copy the rest of the source code
+# 3️⃣ Copy source code for each project separately
 COPY ServiceExample/. ./ServiceExample/
 COPY UnitTests/. ./UnitTests/
 
-# 4️⃣ Build the project
+# 4️⃣ Build projects individually to leverage cache
 RUN dotnet build ServiceExample/ServiceExample.csproj -c Release --no-restore
+RUN dotnet build UnitTests/UnitTests.csproj -c Release --no-restore
 
-# 5️⃣ Run unit tests (optional, ensures build quality)
+# 5️⃣ Run unit tests
 RUN dotnet test UnitTests/UnitTests.csproj --configuration Release --no-build --verbosity normal
 
-# 6️⃣ Publish the app
+# 6️⃣ Publish main application
 RUN dotnet publish ServiceExample/ServiceExample.csproj -c Release -o /app/out --no-build
 
 # Stage 2: Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
-
-# Copy published output
 COPY --from=build /app/out .
 
 # Expose port
