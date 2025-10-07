@@ -13,7 +13,7 @@ stages:
     jobs:
       - job: Build
         pool:
-          vmImage: 'ubuntu-latest'
+          name: SelfHostedPool
         steps:
 
           # 1️⃣ Install .NET SDK
