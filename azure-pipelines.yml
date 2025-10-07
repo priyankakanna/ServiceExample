@@ -6,12 +6,10 @@ trigger:
 variables:
   IMAGE_NAME: 'serviceexample'
   TAG: '$(Build.BuildId)'
-  LATEST_TAG: 'latest'
-  BUILD_CONTEXT: 'ServiceExample'
 
 stages:
   - stage: BuildAndPush
-    displayName: "Build, Test, and Push Docker Image"
+    displayName: "Build and Push Docker Image"
     jobs:
       - job: Build
         pool:
@@ -26,31 +24,16 @@ stages:
               version: '9.0.x'
             displayName: 'Install .NET SDK 9.0.x'
 
-          - task: Cache@2
-            inputs:
-              key: 'nuget | "$(Agent.OS)" | **/*.csproj'
-              path: ~/.nuget/packages
-            displayName: 'Cache NuGet packages'
-
-          - script: dotnet restore --verbosity quiet
+          - script: dotnet restore
             displayName: 'Restore .NET Dependencies'
 
           - script: dotnet build --configuration Release --no-restore
             displayName: 'Build Project'
 
-          # 🔥 FIXED Unit Test Step
-          - script: |
-              dotnet test --configuration Release --verbosity minimal --logger "trx" --results-directory "TestResults"
+          - script: dotnet test --configuration Release --verbosity minimal
             displayName: 'Run Unit Tests'
 
-          # 🔥 SIMPLE DOCKER LOGIN
-          - task: Docker@2
-            displayName: 'Login to ACR'
-            inputs:
-              containerRegistry: 'serviceexampleacr'
-              command: 'login'
-
-          # 🔥 BUILD AND PUSH
+          # 🔥 SINGLE TASK - NO SEPARATE LOGIN
           - task: Docker@2
             displayName: 'Build and Push Docker Image'
             inputs:
@@ -58,7 +41,4 @@ stages:
               containerRegistry: 'serviceexampleacr'
               repository: '$(IMAGE_NAME)'
               dockerfile: 'Dockerfile'
-              buildContext: '$(BUILD_CONTEXT)'
-              tags: |
-                $(TAG)
-                $(LATEST_TAG)
+              tags: $(TAG)
