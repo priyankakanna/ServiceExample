@@ -6,6 +6,9 @@ trigger:
 variables:
   IMAGE_NAME: 'serviceexample'
   TAG: '$(Build.BuildId)'
+  # Pipeline variables
+  buildConfiguration: '$(BuildConfiguration)'
+  aspnetcoreEnvironment: '$(ASPNETCORE_ENVIRONMENT)'
 
 stages:
   - stage: BuildAndPush
@@ -20,14 +23,16 @@ stages:
 
           - script: dotnet restore
             displayName: 'Restore .NET Dependencies'
+            env:
+              DOTNET_CLI_TELEMETRY_OPTOUT: $(DOTNET_CLI_TELEMETRY_OPTOUT)
 
-          - script: dotnet build --configuration Release --no-restore
+          - script: dotnet build --configuration $(buildConfiguration) --no-restore
             displayName: 'Build Project'
 
-          - script: dotnet test --configuration Release --verbosity minimal
+          - script: dotnet test --configuration $(buildConfiguration) --verbosity minimal
             displayName: 'Run Unit Tests'
 
-          # 🔥 BUILD DOCKER IMAGE
+          # BUILD DOCKER IMAGE with environment variables
           - task: Bash@3
             displayName: 'Build Docker Image'
             inputs:
@@ -37,7 +42,7 @@ stages:
                 docker build -t serviceexampleacr.azurecr.io/$(IMAGE_NAME):$(TAG) .
                 echo "✅ Build completed"
 
-          # 🔥 PUSH USING WORKING MANUAL METHOD
+          # PUSH using secret variables
           - task: Bash@3
             displayName: 'Push Docker Image'
             inputs:
@@ -45,8 +50,8 @@ stages:
               script: |
                 echo "=== Pushing Docker Image ==="
                 
-                # Use the exact method that worked manually
-                az acr login --name serviceexampleacr
+                # Use secret variables for authentication
+                echo "$(ACR_PASSWORD)" | docker login serviceexampleacr.azurecr.io --username "$(ACR_USERNAME)" --password-stdin
                 docker push serviceexampleacr.azurecr.io/$(IMAGE_NAME):$(TAG)
                 
                 echo "✅ Push completed successfully"
