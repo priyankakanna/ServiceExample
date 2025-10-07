@@ -27,14 +27,26 @@ stages:
           - script: dotnet test --configuration Release --verbosity minimal
             displayName: 'Run Unit Tests'
 
-          # 🔥 FINAL WORKING DOCKER TASK
-          - task: Docker@2
-            displayName: 'Build and Push Docker Image'
+          # 🔥 BUILD DOCKER IMAGE
+          - task: Bash@3
+            displayName: 'Build Docker Image'
             inputs:
-              command: 'buildAndPush'
-              containerRegistry: 'serviceexampleacr'
-              repository: '$(IMAGE_NAME)'
-              dockerfile: 'Dockerfile'
-              tags: |
-                $(TAG)
-                latest
+              targetType: 'inline'
+              script: |
+                echo "=== Building Docker Image ==="
+                docker build -t serviceexampleacr.azurecr.io/$(IMAGE_NAME):$(TAG) .
+                echo "✅ Build completed"
+
+          # 🔥 PUSH USING WORKING MANUAL METHOD
+          - task: Bash@3
+            displayName: 'Push Docker Image'
+            inputs:
+              targetType: 'inline'
+              script: |
+                echo "=== Pushing Docker Image ==="
+                
+                # Use the exact method that worked manually
+                az acr login --name serviceexampleacr
+                docker push serviceexampleacr.azurecr.io/$(IMAGE_NAME):$(TAG)
+                
+                echo "✅ Push completed successfully"
