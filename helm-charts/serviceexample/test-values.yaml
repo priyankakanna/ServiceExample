@@ -1,0 +1,20 @@
+# test-values.yaml - For local testing without dependencies
+image:
+  repository: serviceexampleacr.azurecr.io/serviceexample
+  tag: latest
+
+mongodb:
+  enabled: false
+
+redis:
+  enabled: false
+
+nats:
+  enabled: false
+
+app:
+  env:
+    ASPNETCORE_ENVIRONMENT: "Development"
+    Aspire__MongoDB__Driver__ConnectionString: "mongodb://localhost:27017"
+    Aspire__StackExchange__Redis__ConnectionString: "localhost:6379"
+    Aspire__NATS__Net__ConnectionString: "nats://localhost:4222"
