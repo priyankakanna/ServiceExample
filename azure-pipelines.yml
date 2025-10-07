@@ -4,41 +4,40 @@ trigger:
       - main
 
 variables:
-  DOCKER_REGISTRY: 'serviceexampleacr.azurecr.io'  
   IMAGE_NAME: 'serviceexample'
   TAG: '$(Build.BuildId)'
 
 stages:
   - stage: BuildAndPush
+    displayName: "Build and Push Docker Image"
     jobs:
       - job: Build
         pool:
           name: SelfHostedPool
         steps:
-
           # 1️⃣ Install .NET SDK
           - task: UseDotNet@2
             inputs:
               packageType: 'sdk'
               version: '9.0.x'
 
-          # 2️⃣ Build the app Docker image using docker-compose
+          # 2️⃣ Restore and Build the .NET Project
           - script: |
-              docker compose -f docker_compose.yaml build app
-            displayName: 'Build app Docker image'
+              dotnet restore
+              dotnet build --configuration Release
+            displayName: 'Restore and Build Project'
 
-          # 3️⃣ Run Unit Tests inside container
+          # 3️⃣ Run Unit Tests
           - script: |
-              docker compose -f docker_compose.yaml run --rm app dotnet test /UnitTests/UnitTests.csproj
+              dotnet test --no-build --verbosity normal
             displayName: 'Run Unit Tests'
 
-          # 4️⃣ Push Docker image to Azure Container Registry
+          # 4️⃣ Build and Push Docker image to ACR
           - task: Docker@2
             inputs:
-              containerRegistry: 'serviceexampleacr'  
-              repository: '$(DOCKER_REGISTRY)/$(IMAGE_NAME)'
+              containerRegistry: 'serviceexampleacr'   # your service connection name
+              repository: '$(IMAGE_NAME)'              # repository name in ACR
               command: 'buildAndPush'
               dockerfile: 'Dockerfile'
               tags: |
                 $(TAG)
-
