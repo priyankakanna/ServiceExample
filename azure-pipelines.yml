@@ -14,7 +14,7 @@ stages:
       - job: Build
         pool:
           name: SelfHostedPool
-        timeoutInMinutes: 10
+        timeoutInMinutes: 8
         steps:
           - checkout: self
             displayName: 'Checkout source code'
@@ -28,13 +28,27 @@ stages:
           - script: dotnet test --configuration Release --verbosity minimal
             displayName: 'Run Unit Tests'
 
-          # 🔥 Build with timeout and verbose logging
-          - task: Docker@2
-            displayName: 'Build and Push Docker Image'
+          # 🔥 DEBUG: Manual Docker commands with better logging
+          - task: Bash@3
+            displayName: 'Debug Docker Build'
             inputs:
-              command: 'buildAndPush'
-              containerRegistry: 'serviceexampleacr'
-              repository: '$(IMAGE_NAME)'
-              dockerfile: 'Dockerfile'
-              tags: $(TAG)
-              arguments: '--progress=plain'
+              targetType: 'inline'
+              script: |
+                echo "=== Starting Docker Build ==="
+                date
+                docker build -t serviceexampleacr.azurecr.io/$(IMAGE_NAME):$(TAG) . --progress=plain
+                echo "=== Build Completed ==="
+                date
+
+          - task: Bash@3
+            displayName: 'Debug Docker Push'
+            inputs:
+              targetType: 'inline'
+              script: |
+                echo "=== Starting Docker Push ==="
+                date
+                # Login and push in one command
+                az acr login --name serviceexampleacr
+                docker push serviceexampleacr.azurecr.io/$(IMAGE_NAME):$(TAG)
+                echo "=== Push Completed ==="
+                date
