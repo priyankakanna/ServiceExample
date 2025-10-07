@@ -6,11 +6,10 @@ trigger:
 variables:
   IMAGE_NAME: 'serviceexample'
   TAG: '$(Build.BuildId)'
-  buildConfiguration: 'Release'
 
 stages:
   - stage: BuildAndPush
-    displayName: "Build and Push Docker Image"  #test
+    displayName: "Build and Push Docker Image"
     jobs:
       - job: Build
         pool:
@@ -22,13 +21,13 @@ stages:
           - script: dotnet restore
             displayName: 'Restore .NET Dependencies'
 
-          - script: dotnet build --configuration $(buildConfiguration) --no-restore
+          - script: dotnet build --configuration Release --no-restore
             displayName: 'Build Project'
 
-          - script: dotnet test --configuration $(buildConfiguration) --verbosity minimal
+          - script: dotnet test --configuration Release --verbosity minimal
             displayName: 'Run Unit Tests'
 
-          # BUILD DOCKER IMAGE
+          # BUILD
           - task: Bash@3
             displayName: 'Build Docker Image'
             inputs:
@@ -38,13 +37,28 @@ stages:
                 docker build -t serviceexampleacr.azurecr.io/$(IMAGE_NAME):$(TAG) .
                 echo "✅ Build completed"
 
-          # PUSH TO ACR
+          # PUSH with explicit verification
           - task: Bash@3
-            displayName: 'Push Docker Image'
+            displayName: 'Push to ACR'
             inputs:
               targetType: 'inline'
               script: |
-                echo "=== Pushing Docker Image ==="
+                echo "=== Starting ACR Push ==="
+                
+                # Debug: Show what we're trying to push
+                echo "Image to push: serviceexampleacr.azurecr.io/$(IMAGE_NAME):$(TAG)"
+                docker images | grep serviceexample
+                
+                # Login with credentials
+                echo "=== Logging into ACR ==="
                 echo "$(ACR_PASSWORD)" | docker login serviceexampleacr.azurecr.io --username "$(ACR_USERNAME)" --password-stdin
+                
+                # Push the image
+                echo "=== Pushing Image ==="
                 docker push serviceexampleacr.azurecr.io/$(IMAGE_NAME):$(TAG)
-                echo "✅ Push completed successfully"
+                
+                echo "✅ Push command completed"
+                
+                # Verify the push worked
+                echo "=== Verifying in ACR ==="
+                az acr repository show-tags --name serviceexampleacr --repository $(IMAGE_NAME) --output table
