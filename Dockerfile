@@ -2,40 +2,43 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# 1️⃣ Copy solution and project files separately for caching
+# 1️⃣ Copy solution and project files separately for better caching
 COPY ServiceExample.sln .
 COPY ServiceExample/*.csproj ./ServiceExample/
 COPY UnitTests/*.csproj ./UnitTests/
 
-# 2️⃣ Restore dependencies (layer will cache unless csproj changes)
-RUN dotnet restore
+# 2️⃣ Restore dependencies (cached layer)
+RUN dotnet restore --verbosity minimal
 
-# 3️⃣ Copy source code for each project separately
+# 3️⃣ Copy remaining source code
 COPY ServiceExample/. ./ServiceExample/
 COPY UnitTests/. ./UnitTests/
 
-# 4️⃣ Build projects individually to leverage cache
-RUN dotnet build ServiceExample/ServiceExample.csproj -c Release --no-restore
-RUN dotnet build UnitTests/UnitTests.csproj -c Release --no-restore
-
-# 5️⃣ Run unit tests
-RUN dotnet test UnitTests/UnitTests.csproj --configuration Release --no-build --verbosity normal
-
-# 6️⃣ Publish main application
-RUN dotnet publish ServiceExample/ServiceExample.csproj -c Release -o /app/out --no-build
+# 4️⃣ Build and test in single layer to reduce image size
+RUN dotnet build ServiceExample/ServiceExample.csproj -c Release --no-restore && \
+    dotnet test UnitTests/UnitTests.csproj -c Release --no-build --verbosity minimal && \
+    dotnet publish ServiceExample/ServiceExample.csproj -c Release -o /app/publish --no-build
 
 # Stage 2: Runtime
-FROM mcr.microsoft.com/dotnet/aspnet:9.0
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
-COPY --from=build /app/out .
+
+# Create a non-root user for security
+RUN adduser --disabled-password --home /app --gecos '' appuser && \
+    chown -R appuser:appuser /app
+USER appuser
+
+COPY --from=build /app/publish .
 
 # Expose port
 EXPOSE 9080
 
-# Environment variables
-ENV Aspire__MongoDB__Driver__ConnectionString=mongodb://mongo:27017
-ENV Aspire__StackExchange__Redis__ConnectionString=redis:6379
-ENV Aspire__NATS__Net__ConnectionString=nats://nats:4222
+# Environment variables (consider using appsettings.json instead)
+ENV ASPNETCORE_URLS=http://+:9080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:9080/health || exit 1
 
 # Run the app
 ENTRYPOINT ["dotnet", "ServiceExample.dll"]
