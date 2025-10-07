@@ -13,7 +13,7 @@ stages:
     jobs:
       - job: Build
         pool:
-          name: SelfHostedPool
+          name: SelfHostedPool   # your self-hosted agent pool
         steps:
           # 1️⃣ Install .NET SDK
           - task: UseDotNet@2
@@ -29,15 +29,16 @@ stages:
 
           # 3️⃣ Run Unit Tests
           - script: |
-              dotnet test --no-build --verbosity normal
+              dotnet test UnitTests/UnitTests.csproj --no-build --verbosity normal
             displayName: 'Run Unit Tests'
 
           # 4️⃣ Build and Push Docker image to ACR
           - task: Docker@2
             inputs:
-              containerRegistry: 'serviceexampleacr'   # your service connection name
+              containerRegistry: 'serviceexampleacr'   # Azure DevOps service connection name
               repository: '$(IMAGE_NAME)'              # repository name in ACR
               command: 'buildAndPush'
               dockerfile: 'Dockerfile'
               tags: |
                 $(TAG)
+                latest
