@@ -9,7 +9,7 @@ variables:
 
 stages:
   - stage: BuildAndPush
-    displayName: "Build and Push Docker Image"
+    displayName: "Build, Test, and Push Docker Image"
     jobs:
       - job: Build
         pool:
@@ -21,21 +21,25 @@ stages:
               packageType: 'sdk'
               version: '9.0.x'
 
-          # 2️⃣ Restore and Build the .NET Project
+          # 2️⃣ Restore dependencies
           - script: |
               dotnet restore
-              dotnet build --configuration Release
-            displayName: 'Restore and Build Project'
+            displayName: 'Restore .NET Dependencies'
 
-          # 3️⃣ Run Unit Tests
+          # 3️⃣ Build the solution
           - script: |
-              dotnet test UnitTests/UnitTests.csproj --no-build --verbosity normal
+              dotnet build ServiceExample.sln --configuration Release
+            displayName: 'Build Solution'
+
+          # 4️⃣ Run Unit Tests
+          - script: |
+              dotnet test UnitTests/UnitTests.csproj --configuration Release --verbosity normal
             displayName: 'Run Unit Tests'
 
-          # 4️⃣ Build and Push Docker image to ACR
+          # 5️⃣ Build and Push Docker image to ACR
           - task: Docker@2
             inputs:
-              containerRegistry: 'serviceexampleacr'   # Azure DevOps service connection name
+              containerRegistry: 'serviceexampleacr'   # your Azure DevOps ACR service connection name
               repository: '$(IMAGE_NAME)'              # repository name in ACR
               command: 'buildAndPush'
               dockerfile: 'Dockerfile'
