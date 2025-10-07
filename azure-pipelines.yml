@@ -1,0 +1,44 @@
+trigger:
+  branches:
+    include:
+      - main
+
+variables:
+  DOCKER_REGISTRY: 'serviceexampleacr.azurecr.io'  # Replace with your ACR login server
+  IMAGE_NAME: 'serviceexample'
+  TAG: '$(Build.BuildId)'
+
+stages:
+  - stage: BuildAndPush
+    jobs:
+      - job: Build
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+
+          # 1️⃣ Install .NET SDK
+          - task: UseDotNet@2
+            inputs:
+              packageType: 'sdk'
+              version: '9.0.x'
+
+          # 2️⃣ Build the app Docker image using docker-compose
+          - script: |
+              docker compose -f docker_compose.yaml build app
+            displayName: 'Build app Docker image'
+
+          # 3️⃣ Run Unit Tests inside container
+          - script: |
+              docker compose -f docker_compose.yaml run --rm app dotnet test /UnitTests/UnitTests.csproj
+            displayName: 'Run Unit Tests'
+
+          # 4️⃣ Push Docker image to Azure Container Registry
+          - task: Docker@2
+            inputs:
+              containerRegistry: 'serviceexampleacr'  # Your manual service connection name
+              repository: '$(DOCKER_REGISTRY)/$(IMAGE_NAME)'
+              command: 'buildAndPush'
+              dockerfile: 'Dockerfile'
+              tags: |
+                $(TAG)
+
