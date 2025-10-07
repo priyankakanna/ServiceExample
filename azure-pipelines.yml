@@ -10,7 +10,7 @@ variables:
 
 stages:
   - stage: BuildAndPush
-    displayName: "Build and Push Docker Image"
+    displayName: "Build and Push Docker Image"  #test
     jobs:
       - job: Build
         pool:
