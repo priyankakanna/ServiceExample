@@ -14,7 +14,7 @@ stages:
       - job: Build
         pool:
           name: SelfHostedPool
-        timeoutInMinutes: 8
+        timeoutInMinutes: 10
         steps:
           - checkout: self
             displayName: 'Checkout source code'
@@ -28,22 +28,22 @@ stages:
           - script: dotnet test --configuration Release --verbosity minimal
             displayName: 'Run Unit Tests'
 
-          # 🔥 SEPARATE BUILD STEP
-          - task: Docker@2
-            displayName: 'Build Docker Image'
+          # 🔥 MANUAL DOCKER BUILD WITH VERBOSE LOGGING
+          - task: Bash@3
+            displayName: 'Debug Docker Build'
             inputs:
-              containerRegistry: 'serviceexampleacr'
-              repository: '$(IMAGE_NAME)'
-              command: 'build'
-              dockerfile: 'Dockerfile'
-              tags: $(TAG)
-              arguments: '--progress=plain'
-
-          # 🔥 SEPARATE PUSH STEP  
-          - task: Docker@2
-            displayName: 'Push Docker Image'
-            inputs:
-              containerRegistry: 'serviceexampleacr'
-              repository: '$(IMAGE_NAME)'
-              command: 'push'
-              tags: $(TAG)
+              targetType: 'inline'
+              script: |
+                echo "=== Starting Docker Build at: $(date) ==="
+                echo "Current directory: $(pwd)"
+                echo "Files in directory:"
+                ls -la
+                
+                echo "=== Docker Build Started ==="
+                time docker build -t serviceexampleacr.azurecr.io/$(IMAGE_NAME):$(TAG) . \
+                  --progress=plain \
+                  --no-cache \
+                  --pull
+                
+                echo "=== Docker Build Completed at: $(date) ==="
+                echo "Build time statistics above"
