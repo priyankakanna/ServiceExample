@@ -15,34 +15,66 @@ stages:
         pool:
           name: SelfHostedPool   # your self-hosted agent pool
         steps:
-          # 1️⃣ Install .NET SDK
+          # 1️⃣ Checkout code
+          - checkout: self
+            displayName: 'Checkout source code'
+
+          # 2️⃣ Install .NET SDK
           - task: UseDotNet@2
             inputs:
               packageType: 'sdk'
               version: '9.0.x'
+            displayName: 'Install .NET SDK 9.0.x'
 
-          # 2️⃣ Restore dependencies
-          - script: |
-              dotnet restore
+          # 3️⃣ Cache NuGet packages for faster restores
+          - task: Cache@2
+            inputs:
+              key: 'nuget | "$(Agent.OS)" | **/*.csproj'
+              path: ~/.nuget/packages
+            displayName: 'Cache NuGet packages'
+
+          # 4️⃣ Restore dependencies
+          - script: dotnet restore
             displayName: 'Restore .NET Dependencies'
 
-          # 3️⃣ Build the solution
-          - script: |
-              dotnet build ServiceExample.sln --configuration Release
-            displayName: 'Build Solution'
+          # 5️⃣ Build the project
+          - script: dotnet build ServiceExample/ServiceExample.csproj -c Release
+            displayName: 'Build Project'
 
-          # 4️⃣ Run Unit Tests
-          - script: |
-              dotnet test UnitTests/UnitTests.csproj --configuration Release --verbosity normal
+          # 6️⃣ Run Unit Tests
+          - script: dotnet test UnitTests/UnitTests.csproj --configuration Release --verbosity normal
             displayName: 'Run Unit Tests'
 
-          # 5️⃣ Build and Push Docker image to ACR
+          # 7️⃣ Docker Login to ACR
           - task: Docker@2
+            displayName: 'Login to ACR'
             inputs:
-              containerRegistry: 'serviceexampleacr'   # your Azure DevOps ACR service connection name
-              repository: '$(IMAGE_NAME)'              # repository name in ACR
-              command: 'buildAndPush'
+              containerRegistry: 'serviceexampleacr'   # Replace with your Azure DevOps Service Connection
+              command: login
+              enableVerboseLogging: true
+
+          # 8️⃣ Build Docker Image
+          - task: Docker@2
+            displayName: 'Build Docker Image'
+            inputs:
+              containerRegistry: 'serviceexampleacr'
+              repository: '$(IMAGE_NAME)'
+              command: build
               dockerfile: 'Dockerfile'
               tags: |
                 $(TAG)
                 latest
+              buildContext: '.'
+              enableVerboseLogging: true
+
+          # 9️⃣ Push Docker Image to ACR
+          - task: Docker@2
+            displayName: 'Push Docker Image to ACR'
+            inputs:
+              containerRegistry: 'serviceexampleacr'
+              repository: '$(IMAGE_NAME)'
+              command: push
+              tags: |
+                $(TAG)
+                latest
+              enableVerboseLogging: true
