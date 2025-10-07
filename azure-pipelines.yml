@@ -14,7 +14,6 @@ stages:
       - job: Build
         pool:
           name: SelfHostedPool
-        timeoutInMinutes: 8
         steps:
           - checkout: self
             displayName: 'Checkout source code'
@@ -28,34 +27,12 @@ stages:
           - script: dotnet test --configuration Release --verbosity minimal
             displayName: 'Run Unit Tests'
 
-          # 🔥 BUILD ONLY
-          - task: Bash@3
-            displayName: 'Build Docker Image'
+          # 🔥 USE DOCKER TASK - Let Azure handle authentication
+          - task: Docker@2
+            displayName: 'Build and Push Docker Image'
             inputs:
-              targetType: 'inline'
-              script: |
-                echo "=== Building Docker Image ==="
-                docker build -t serviceexampleacr.azurecr.io/$(IMAGE_NAME):$(TAG) . --progress=plain
-                echo "✅ Build completed"
-
-          # 🔥 PUSH WITH CREDENTIAL BYPASS
-          - task: AzureCLI@2
-            displayName: 'Push Docker Image (No Credential Storage)'
-            inputs:
-              azureSubscription: 'serviceexampleacr-connection'
-              scriptType: 'bash'
-              scriptLocation: 'inlineScript'
-              inlineScript: |
-                echo "=== Pushing with Credential Bypass ==="
-                
-                # Get ACR credentials
-                ACR_USERNAME=$(az acr credential show --name serviceexampleacr --query "username" -o tsv)
-                ACR_PASSWORD=$(az acr credential show --name serviceexampleacr --query "passwords[0].value" -o tsv)
-                
-                # Use temporary environment to avoid credential storage
-                DOCKER_CONFIG=/dev/null docker login serviceexampleacr.azurecr.io --username "$ACR_USERNAME" --password-stdin <<< "$ACR_PASSWORD"
-                
-                # Push immediately after login
-                docker push serviceexampleacr.azurecr.io/$(IMAGE_NAME):$(TAG)
-                
-                echo "✅ Push completed successfully"
+              command: 'buildAndPush'
+              containerRegistry: 'serviceexampleacr'
+              repository: '$(IMAGE_NAME)'
+              dockerfile: 'Dockerfile'
+              tags: $(TAG)
