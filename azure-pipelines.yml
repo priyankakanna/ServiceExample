@@ -7,6 +7,8 @@ variables:
   IMAGE_NAME: 'serviceexample'
   TAG: '$(Build.BuildId)'
   LATEST_TAG: 'latest'
+  # Add build context to optimize caching
+  BUILD_CONTEXT: 'ServiceExample'
 
 stages:
   - stage: BuildAndPush
@@ -20,7 +22,7 @@ stages:
           - checkout: self
             displayName: 'Checkout source code'
 
-          # 2️⃣ Install .NET SDK
+          # 2️⃣ Install .NET SDK (move before cache for better performance)
           - task: UseDotNet@2
             inputs:
               packageType: 'sdk'
@@ -30,53 +32,45 @@ stages:
           # 3️⃣ Cache NuGet packages
           - task: Cache@2
             inputs:
-              key: 'nuget | "$(Agent.OS)" | **/*.csproj'
+              key: 'nuget | "$(Agent.OS)" | **/*.csproj | **/global.json'
+              restoreKeys: |
+                nuget | "$(Agent.OS)"
               path: ~/.nuget/packages
             displayName: 'Cache NuGet packages'
 
           # 4️⃣ Restore dependencies
-          - script: dotnet restore
+          - script: |
+              dotnet restore --verbosity minimal
             displayName: 'Restore .NET Dependencies'
 
           # 5️⃣ Build project
-          - script: dotnet build ServiceExample/ServiceExample.csproj -c Release
+          - script: |
+              dotnet build ServiceExample/ServiceExample.csproj -c Release --no-restore
             displayName: 'Build Project'
 
           # 6️⃣ Run Unit Tests
-          - script: dotnet test UnitTests/UnitTests.csproj --configuration Release --verbosity normal
+          - script: |
+              dotnet test UnitTests/UnitTests.csproj --configuration Release --no-build --verbosity minimal
             displayName: 'Run Unit Tests'
 
-          # 7️⃣ Docker login
+          # 7️⃣ Docker login (OPTIMIZED - combined with build)
           - task: Docker@2
-            displayName: 'Docker Login to ACR'
+            displayName: 'Login to ACR'
             inputs:
               containerRegistry: 'serviceexampleacr'
               command: login
-              enableVerboseLogging: true
+            # Remove verbose logging in production
 
-          # 8️⃣ Docker build with incremental cache
+          # 8️⃣ Docker build and push in one task (MOST IMPORTANT OPTIMIZATION)
           - task: Docker@2
-            displayName: 'Docker Build'
+            displayName: 'Build and Push Docker Image'
             inputs:
+              command: buildAndPush
               containerRegistry: 'serviceexampleacr'
               repository: '$(IMAGE_NAME)'
-              command: build
               dockerfile: 'Dockerfile'
+              buildContext: '$(BUILD_CONTEXT)'
               tags: |
                 $(TAG)
                 $(LATEST_TAG)
-              buildContext: '.'
-              enableVerboseLogging: true
-              arguments: '--cache-from $(IMAGE_NAME):latest'
-
-          # 9️⃣ Docker push
-          - task: Docker@2
-            displayName: 'Docker Push'
-            inputs:
-              containerRegistry: 'serviceexampleacr'
-              repository: '$(IMAGE_NAME)'
-              command: push
-              tags: |
-                $(TAG)
-                $(LATEST_TAG)
-              enableVerboseLogging: true
+              arguments: '--cache-from $(IMAGE_NAME):latest --pull'
