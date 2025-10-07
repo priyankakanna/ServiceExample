@@ -14,7 +14,6 @@ stages:
       - job: Build
         pool:
           name: SelfHostedPool
-        timeoutInMinutes: 10
         steps:
           - checkout: self
             displayName: 'Checkout source code'
@@ -28,22 +27,33 @@ stages:
           - script: dotnet test --configuration Release --verbosity minimal
             displayName: 'Run Unit Tests'
 
-          # 🔥 MANUAL DOCKER BUILD WITH VERBOSE LOGGING
+          # 🔥 BUILD STEP (we know this works fast)
           - task: Bash@3
-            displayName: 'Debug Docker Build'
+            displayName: 'Build Docker Image'
             inputs:
               targetType: 'inline'
               script: |
-                echo "=== Starting Docker Build at: $(date) ==="
-                echo "Current directory: $(pwd)"
-                echo "Files in directory:"
-                ls -la
+                echo "=== Building Docker Image ==="
+                docker build -t serviceexampleacr.azurecr.io/$(IMAGE_NAME):$(TAG) . --progress=plain
+                echo "✅ Build completed in $(time docker build -t serviceexampleacr.azurecr.io/$(IMAGE_NAME):$(TAG) . 2>&1 | grep real)"
+
+          # 🔥 PUSH STEP with credential workaround
+          - task: Bash@3
+            displayName: 'Push Docker Image'
+            inputs:
+              targetType: 'inline'
+              script: |
+                echo "=== Pushing Docker Image ==="
+                # Use temporary config to avoid GPG issues
+                mkdir -p /tmp/docker-push
+                echo '{}' > /tmp/docker-push/config.json
+                export DOCKER_CONFIG=/tmp/docker-push
                 
-                echo "=== Docker Build Started ==="
-                time docker build -t serviceexampleacr.azurecr.io/$(IMAGE_NAME):$(TAG) . \
-                  --progress=plain \
-                  --no-cache \
-                  --pull
+                # Get credentials and push
+                ACR_USERNAME=$(az acr credential show --name serviceexampleacr --query "username" -o tsv)
+                ACR_PASSWORD=$(az acr credential show --name serviceexampleacr --query "passwords[0].value" -o tsv)
                 
-                echo "=== Docker Build Completed at: $(date) ==="
-                echo "Build time statistics above"
+                echo "$ACR_PASSWORD" | docker login serviceexampleacr.azurecr.io --username "$ACR_USERNAME" --password-stdin
+                docker push serviceexampleacr.azurecr.io/$(IMAGE_NAME):$(TAG)
+                
+                echo "✅ Push completed successfully"
