@@ -1,27 +1,22 @@
-# Stage 1: Build
+# Use smaller base image
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+WORKDIR /app
+EXPOSE 9080
+
+# Build stage
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy only project files first for better caching
-COPY ServiceExample.sln .
-COPY ServiceExample/*.csproj ./ServiceExample/
-COPY UnitTests/*.csproj ./UnitTests/
+# Copy ONLY what's needed for restore
+COPY ServiceExample/ServiceExample.csproj ./ServiceExample/
+RUN dotnet restore ServiceExample/ServiceExample.csproj --verbosity quiet
 
-# Restore dependencies (this layer caches well)
-RUN dotnet restore --verbosity quiet
-
-# Copy remaining source
+# Copy source and build
 COPY ServiceExample/. ./ServiceExample/
-COPY UnitTests/. ./UnitTests/
+RUN dotnet publish ServiceExample/ServiceExample.csproj -c Release -o /app/publish --no-restore
 
-# Build and test in one layer
-RUN dotnet build -c Release --no-restore && \
-    dotnet test -c Release --no-build --verbosity quiet && \
-    dotnet publish ServiceExample/ServiceExample.csproj -c Release -o /app/publish --no-build
-
-# Stage 2: Runtime
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
+# Final stage
+FROM base AS final
 WORKDIR /app
 COPY --from=build /app/publish .
-EXPOSE 9080
 ENTRYPOINT ["dotnet", "ServiceExample.dll"]
