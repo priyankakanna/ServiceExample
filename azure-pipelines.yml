@@ -6,6 +6,7 @@ trigger:
 variables:
   IMAGE_NAME: 'serviceexample'
   TAG: '$(Build.BuildId)'
+  LATEST_TAG: 'latest'
 
 stages:
   - stage: BuildAndPush
@@ -13,9 +14,9 @@ stages:
     jobs:
       - job: Build
         pool:
-          name: SelfHostedPool   # your self-hosted agent pool
+          name: SelfHostedPool
         steps:
-          # 1️⃣ Checkout code
+          # 1️⃣ Checkout source code
           - checkout: self
             displayName: 'Checkout source code'
 
@@ -26,7 +27,7 @@ stages:
               version: '9.0.x'
             displayName: 'Install .NET SDK 9.0.x'
 
-          # 3️⃣ Cache NuGet packages for faster restores
+          # 3️⃣ Cache NuGet packages
           - task: Cache@2
             inputs:
               key: 'nuget | "$(Agent.OS)" | **/*.csproj'
@@ -37,7 +38,7 @@ stages:
           - script: dotnet restore
             displayName: 'Restore .NET Dependencies'
 
-          # 5️⃣ Build the project
+          # 5️⃣ Build project
           - script: dotnet build ServiceExample/ServiceExample.csproj -c Release
             displayName: 'Build Project'
 
@@ -45,17 +46,17 @@ stages:
           - script: dotnet test UnitTests/UnitTests.csproj --configuration Release --verbosity normal
             displayName: 'Run Unit Tests'
 
-          # 7️⃣ Docker Login to ACR
+          # 7️⃣ Docker login
           - task: Docker@2
-            displayName: 'Login to ACR'
+            displayName: 'Docker Login to ACR'
             inputs:
-              containerRegistry: 'serviceexampleacr'   # Replace with your Azure DevOps Service Connection
+              containerRegistry: 'serviceexampleacr'
               command: login
               enableVerboseLogging: true
 
-          # 8️⃣ Build Docker Image
+          # 8️⃣ Docker build with incremental cache
           - task: Docker@2
-            displayName: 'Build Docker Image'
+            displayName: 'Docker Build'
             inputs:
               containerRegistry: 'serviceexampleacr'
               repository: '$(IMAGE_NAME)'
@@ -63,18 +64,19 @@ stages:
               dockerfile: 'Dockerfile'
               tags: |
                 $(TAG)
-                latest
+                $(LATEST_TAG)
               buildContext: '.'
               enableVerboseLogging: true
+              arguments: '--cache-from $(IMAGE_NAME):latest'
 
-          # 9️⃣ Push Docker Image to ACR
+          # 9️⃣ Docker push
           - task: Docker@2
-            displayName: 'Push Docker Image to ACR'
+            displayName: 'Docker Push'
             inputs:
               containerRegistry: 'serviceexampleacr'
               repository: '$(IMAGE_NAME)'
               command: push
               tags: |
                 $(TAG)
-                latest
+                $(LATEST_TAG)
               enableVerboseLogging: true
