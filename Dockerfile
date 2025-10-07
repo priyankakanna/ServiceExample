@@ -2,18 +2,32 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy solution and project folders
+# 1️⃣ Copy solution and project files first for caching
 COPY ServiceExample.sln .
-COPY ServiceExample/ ServiceExample/
-COPY UnitTests/ UnitTests/
+COPY ServiceExample/*.csproj ./ServiceExample/
+COPY UnitTests/*.csproj ./UnitTests/
 
-# Restore dependencies and publish
+# 2️⃣ Restore dependencies (cached if csproj files don't change)
 RUN dotnet restore
-RUN dotnet publish ServiceExample/ServiceExample.csproj -c Release -o /app/out
+
+# 3️⃣ Copy the rest of the source code
+COPY ServiceExample/. ./ServiceExample/
+COPY UnitTests/. ./UnitTests/
+
+# 4️⃣ Build the project
+RUN dotnet build ServiceExample/ServiceExample.csproj -c Release --no-restore
+
+# 5️⃣ Run unit tests (optional, ensures build quality)
+RUN dotnet test UnitTests/UnitTests.csproj --configuration Release --no-build --verbosity normal
+
+# 6️⃣ Publish the app
+RUN dotnet publish ServiceExample/ServiceExample.csproj -c Release -o /app/out --no-build
 
 # Stage 2: Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
+
+# Copy published output
 COPY --from=build /app/out .
 
 # Expose port
@@ -26,4 +40,3 @@ ENV Aspire__NATS__Net__ConnectionString=nats://nats:4222
 
 # Run the app
 ENTRYPOINT ["dotnet", "ServiceExample.dll"]
-
