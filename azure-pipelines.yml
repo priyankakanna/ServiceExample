@@ -7,8 +7,8 @@ variables:
   IMAGE_NAME: 'serviceexample'
   TAG: '$(Build.BuildId)'
   LATEST_TAG: 'latest'
-  # Add build context to optimize caching
   BUILD_CONTEXT: 'ServiceExample'
+  azureSubscription: 'your-azure-service-connection'
 
 stages:
   - stage: BuildAndPush
@@ -18,50 +18,51 @@ stages:
         pool:
           name: SelfHostedPool
         steps:
-          # 1️⃣ Checkout source code
           - checkout: self
             displayName: 'Checkout source code'
 
-          # 2️⃣ Install .NET SDK (move before cache for better performance)
           - task: UseDotNet@2
             inputs:
               packageType: 'sdk'
               version: '9.0.x'
             displayName: 'Install .NET SDK 9.0.x'
 
-          # 3️⃣ Cache NuGet packages
           - task: Cache@2
             inputs:
-              key: 'nuget | "$(Agent.OS)" | **/*.csproj | **/global.json'
-              restoreKeys: |
-                nuget | "$(Agent.OS)"
+              key: 'nuget | "$(Agent.OS)" | **/*.csproj'
               path: ~/.nuget/packages
             displayName: 'Cache NuGet packages'
 
-          # 4️⃣ Restore dependencies
-          - script: |
-              dotnet restore --verbosity minimal
+          - script: dotnet restore --verbosity quiet
             displayName: 'Restore .NET Dependencies'
 
-          # 5️⃣ Build project
-          - script: |
-              dotnet build ServiceExample/ServiceExample.csproj -c Release --no-restore
+          - script: dotnet build ServiceExample/ServiceExample.csproj -c Release --no-restore
             displayName: 'Build Project'
 
-          # 6️⃣ Run Unit Tests
-          - script: |
-              dotnet test UnitTests/UnitTests.csproj --configuration Release --no-build --verbosity minimal
+          - script: dotnet test UnitTests/UnitTests.csproj --configuration Release --no-build --verbosity minimal
             displayName: 'Run Unit Tests'
 
-          # 7️⃣ Docker login (OPTIMIZED - combined with build)
-          - task: Docker@2
-            displayName: 'Login to ACR'
+          # 🔥 OPTIMIZED: Pre-login check and Azure CLI login
+          - task: AzureCLI@2
+            displayName: 'Check ACR and Login'
             inputs:
-              containerRegistry: 'serviceexampleacr'
-              command: login
-            # Remove verbose logging in production
+              azureSubscription: $(azureSubscription)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                echo "Checking ACR SKU..."
+                ACR_SKU=$(az acr show --name serviceexampleacr --query sku.name -o tsv)
+                echo "Current ACR SKU: $ACR_SKU"
+                
+                if [ "$ACR_SKU" = "Basic" ]; then
+                  echo "⚠️  Using Basic SKU - login may be slower. Consider upgrading to Standard/Premium."
+                fi
+                
+                echo "Logging into ACR..."
+                az acr login --name serviceexampleacr
+                echo "✅ ACR login completed"
 
-          # 8️⃣ Docker build and push in one task (MOST IMPORTANT OPTIMIZATION)
+          # 🔥 Single build and push operation
           - task: Docker@2
             displayName: 'Build and Push Docker Image'
             inputs:
@@ -73,4 +74,5 @@ stages:
               tags: |
                 $(TAG)
                 $(LATEST_TAG)
-              arguments: '--cache-from $(IMAGE_NAME):latest --pull'
+              # Add build arguments for better caching
+              arguments: '--build-arg BUILDKIT_INLINE_CACHE=1'
