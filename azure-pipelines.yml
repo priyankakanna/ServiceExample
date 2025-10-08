@@ -10,10 +10,10 @@ variables:
 
 steps:
 - script: |
-    echo "=== Starting Build Process ==="
-    echo "Build ID: $(Build.BuildId)"
+    echo "=== SELF-HOSTED AGENT DEMO ==="
+    echo "Agent: nagapriyankapc"
     echo "Pool: SelfHostedPool"
-    echo "Image: $(imageRepository):$(tag)"
+    echo "Organization: kannapriyanka01"
     
     # Install Podman
     echo "Installing Podman..."
@@ -21,23 +21,16 @@ steps:
     sudo apt install -y podman
     
     # Login to ACR
-    echo "Logging into Azure Container Registry..."
+    echo "Logging into ACR..."
     podman login $(imageRepository) --username "$(acrUsername)" --password "$(acrPassword)"
     
-    # Build image
-    echo "Building Docker image..."
+    # Build and push
+    echo "Building and pushing container..."
     podman build -t $(imageRepository):$(tag) -f Dockerfile .
-    
-    # Push image with build ID
-    echo "Pushing image to ACR..."
     podman push $(imageRepository):$(tag)
-    
-    # Also tag and push as latest
-    echo "Tagging and pushing as latest..."
     podman tag $(imageRepository):$(tag) $(imageRepository):latest
     podman push $(imageRepository):latest
     
-    echo "=== Build Completed Successfully! ==="
-    echo "Image pushed: $(imageRepository):$(tag)"
-    echo "Image pushed: $(imageRepository):latest"
-  displayName: 'Build and Push Container Image'
+    echo "✅ BUILD SUCCESSFUL!"
+    echo "Image: $(imageRepository):$(tag)"
+  displayName: 'Build and Push Container'
