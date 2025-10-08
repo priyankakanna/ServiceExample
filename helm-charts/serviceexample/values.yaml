@@ -1,66 +1,9 @@
 replicaCount: 1
 
-# Main Application Image - use nginx for demo
+# Main Application Image from ACR
 image:
-  repository: nginx
+  repository: serviceexampleacr.azurecr.io/serviceexample
   tag: latest
   pullPolicy: IfNotPresent
 
-# Image Pull Secrets for ACR
-imagePullSecrets:
-  - name: acr-secret
-
-# Service Configuration
-service:
-  type: ClusterIP
-
-# App Configuration
-app:
-  port: 8080
-  env:
-    ASPNETCORE_ENVIRONMENT: "Production"
-    Aspire__MongoDB__Driver__ConnectionString: "mongodb://mongo:27017"
-    Aspire__StackExchange__Redis__ConnectionString: "redis:6379"
-    Aspire__NATS__Net__ConnectionString: "nats://serviceexample-nats:4222"
-
-# Resource Configuration
-resources:
-  requests:
-    memory: "256Mi"
-    cpu: "250m"
-  limits:
-    memory: "512Mi"
-    cpu: "500m"
-
-# Auto-scaling Configuration
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-
-# Dependencies Configuration - Disable problematic ones for demo
-mongodb:
-  enabled: false
-
-redis:
-  enabled: false
-
-nats:
-  enabled: true
-  nats:
-    image: nats:latest
-  cluster:
-    enabled: false
-
-# Update app port to match nginx
-app:
-  port: 80
-
-# App Configuration
-app:
-  env:
-    ASPNETCORE_ENVIRONMENT: "Production"
-    Aspire__MongoDB__Driver__ConnectionString: "mongodb://mongo:27017"
-    Aspire__StackExchange__Redis__ConnectionString: "redis:6379"
-    Aspire__NATS__Net__ConnectionString: "nats://serviceexample-nats:4222"
+# ... rest of values.yaml remains the same
