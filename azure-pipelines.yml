@@ -10,27 +10,13 @@ variables:
 
 steps:
 - script: |
-    echo "=== SELF-HOSTED AGENT DEMO ==="
-    echo "Agent: nagapriyankapc"
-    echo "Pool: SelfHostedPool"
-    echo "Organization: kannapriyanka01"
-    
-    # Install Podman
-    echo "Installing Podman..."
-    sudo apt update
-    sudo apt install -y podman
-    
-    # Login to ACR
-    echo "Logging into ACR..."
     podman login $(imageRepository) --username "$(acrUsername)" --password "$(acrPassword)"
-    
-    # Build and push
-    echo "Building and pushing container..."
     podman build -t $(imageRepository):$(tag) -f Dockerfile .
     podman push $(imageRepository):$(tag)
     podman tag $(imageRepository):$(tag) $(imageRepository):latest
     podman push $(imageRepository):latest
-    
-    echo "✅ BUILD SUCCESSFUL!"
-    echo "Image: $(imageRepository):$(tag)"
-  displayName: 'Build and Push Container'
+    echo "✅ Image pushed to ACR: $(imageRepository):$(tag)"
+  displayName: 'Build and Push'
+  env:
+    acrUsername: $(acrUsername)
+    acrPassword: $(acrPassword)
