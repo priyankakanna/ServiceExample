@@ -1,4 +1,4 @@
-# azure-pipeline-simple.yml
+# azure-pipeline.yml
 trigger:
   branches:
     include:
@@ -7,8 +7,6 @@ trigger:
 variables:
   IMAGE_NAME: 'serviceexample'
   TAG: '$(Build.BuildId)'
-  # Use a fixed ACR name that you create manually once
-  ACR_NAME: 'serviceexampledemo' 
 
 stages:
   - stage: BuildAndPush
@@ -44,10 +42,12 @@ stages:
 
           # VERIFICATION
           - task: Bash@3
-            displayName: 'Verify Push'
+            displayName: 'Show Demo Info'
             inputs:
               targetType: 'inline'
               script: |
                 echo "🎉 === DEMO READY === 🎉"
-                echo "Image pushed successfully to ACR"
-                echo "Use your existing ACR for demo"
+                echo "✅ Image successfully pushed to ACR"
+                echo "📦 Image: serviceexample:$(TAG)"
+                echo "📦 Latest: serviceexample:latest"
+                echo "🔍 Check in Azure Portal under your ACR"
