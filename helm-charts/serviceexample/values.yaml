@@ -56,3 +56,11 @@ nats:
 # Update app port to match nginx
 app:
   port: 80
+
+# App Configuration
+app:
+  env:
+    ASPNETCORE_ENVIRONMENT: "Production"
+    Aspire__MongoDB__Driver__ConnectionString: "mongodb://mongo:27017"
+    Aspire__StackExchange__Redis__ConnectionString: "redis:6379"
+    Aspire__NATS__Net__ConnectionString: "nats://serviceexample-nats:4222"
