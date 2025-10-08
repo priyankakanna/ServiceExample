@@ -26,17 +26,17 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: 9080
+              containerPort: 80  # nginx runs on port 80
               protocol: TCP
           livenessProbe:
             httpGet:
-              path: /health
+              path: /  # nginx serves root path
               port: http
-            initialDelaySeconds: 30
+            initialDelaySeconds: 10
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /health
+              path: /  # nginx serves root path
               port: http
             initialDelaySeconds: 5
             periodSeconds: 5
@@ -44,9 +44,9 @@ spec:
             - name: ASPNETCORE_ENVIRONMENT
               value: {{ .Values.app.env.ASPNETCORE_ENVIRONMENT | default "Production" | quote }}
             - name: Aspire__MongoDB__Driver__ConnectionString
-              value: {{ .Values.app.env.Aspire__MongoDB__Driver__ConnectionString | default "mongodb://serviceexample-mongodb:27017" | quote }}
+              value: {{ .Values.app.env.Aspire__MongoDB__Driver__ConnectionString | default "mongodb://mongo:27017" | quote }}
             - name: Aspire__StackExchange__Redis__ConnectionString
-              value: {{ .Values.app.env.Aspire__StackExchange__Redis__ConnectionString | default "serviceexample-redis-master:6379" | quote }}
+              value: {{ .Values.app.env.Aspire__StackExchange__Redis__ConnectionString | default "redis:6379" | quote }}
             - name: Aspire__NATS__Net__ConnectionString
               value: {{ .Values.app.env.Aspire__NATS__Net__ConnectionString | default "nats://serviceexample-nats:4222" | quote }}
           resources:

@@ -7,8 +7,8 @@ metadata:
 spec:
   type: {{ .Values.service.type | default "ClusterIP" }}
   ports:
-    - port: {{ .Values.app.port }}
-      targetPort: http
+    - port: 80  # Service exposes port 80
+      targetPort: http  # Maps to container port named "http" (80)
       protocol: TCP
       name: http
   selector:

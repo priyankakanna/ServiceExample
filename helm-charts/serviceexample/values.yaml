@@ -52,3 +52,7 @@ nats:
     image: nats:latest
   cluster:
     enabled: false
+
+# Update app port to match nginx
+app:
+  port: 80
