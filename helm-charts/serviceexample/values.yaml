@@ -1,35 +1,12 @@
-# helm-charts/serviceexample/values.yaml
-# Default values for serviceexample
-
-# Application Configuration
+# ServiceExample Helm Values
 image:
-  repository: serviceexampleacr.azurecr.io/serviceexample
+  repository: your-app-image
   tag: latest
   pullPolicy: IfNotPresent
 
-service:
-  type: ClusterIP
-  port: 9080
-  targetPort: 9080
-
-ingress:
-  enabled: false
-  className: ""
-  annotations: {}
-  hosts:
-    - host: serviceexample.local
-      paths:
-        - path: /
-          pathType: Prefix
-  tls: []
-
-# Application Environment Variables
+# Application Configuration
 app:
-  env:
-    ASPNETCORE_ENVIRONMENT: "Production"
-    Aspire__MongoDB__Driver__ConnectionString: "mongodb://{{ .Release.Name }}-mongodb:27017"
-    Aspire__StackExchange__Redis__ConnectionString: "{{ .Release.Name }}-redis-master:6379"
-    Aspire__NATS__Net__ConnectionString: "nats://{{ .Release.Name }}-nats:4222"
+  port: 8080
 
 # Resource Configuration
 resources:
@@ -53,12 +30,17 @@ mongodb:
   architecture: standalone
   auth:
     enabled: false
+  persistence:
+    enabled: false  # ← ADD THIS LINE - disables PVC, uses emptyDir
 
 redis:
   enabled: true
   architecture: standalone
   auth:
     enabled: false
+  master:
+    persistence:
+      enabled: false  # ← ADD THIS LINE - disables PVC, uses emptyDir
 
 nats:
   enabled: true
