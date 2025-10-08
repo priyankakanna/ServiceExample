@@ -4,23 +4,58 @@ trigger:
 
 pool: SelfHostedPool
 
+variables:
+  IMAGE_NAME: 'serviceexample'
+  TAG: '$(Build.BuildId)'
+
 steps:
 - checkout: self
+  displayName: 'Checkout code'
 
 - script: |
+    echo "=== BUILDING .NET APPLICATION ==="
     dotnet restore
     dotnet build --configuration Release --no-restore
     dotnet test --configuration Release --verbosity minimal
-  displayName: 'Build and Test'
+    echo "✅ .NET app built and tested"
+  displayName: 'Build and Test .NET App'
 
 - script: |
-    echo "Building container image..."
-    podman build -t serviceexample:$(Build.BuildId) -f Dockerfile .
-    echo "✅ Build completed on self-hosted agent"
-  displayName: 'Build Container'
+    echo "=== AUTHENTICATING WITH ACR ==="
+    podman login serviceexampleacr.azurecr.io --username "$(acrUsername)" --password "$(acrPassword)"
+    echo "✅ Logged into ACR successfully"
+  displayName: 'Login to ACR'
+  env:
+    acrUsername: $(acrUsername)
+    acrPassword: $(acrPassword)
 
 - script: |
-    echo "🎉 DEMO SUCCESS!"
-    echo "Running on: $(Agent.MachineName)"
-    echo "Pool: $(Agent.PoolName)"
-  displayName: 'Success Message'
+    echo "=== BUILDING CONTAINER IMAGE ==="
+    podman build -t serviceexampleacr.azurecr.io/$(IMAGE_NAME):$(TAG) -f Dockerfile .
+    echo "✅ Image built successfully"
+  displayName: 'Build Container Image'
+
+- script: |
+    echo "=== PUSHING TO ACR ==="
+    podman push serviceexampleacr.azurecr.io/$(IMAGE_NAME):$(TAG)
+    echo "✅ Image pushed: serviceexampleacr.azurecr.io/$(IMAGE_NAME):$(TAG)"
+  displayName: 'Push Image with Build ID'
+
+- script: |
+    echo "=== TAGGING AS LATEST ==="
+    podman tag serviceexampleacr.azurecr.io/$(IMAGE_NAME):$(TAG) serviceexampleacr.azurecr.io/$(IMAGE_NAME):latest
+    podman push serviceexampleacr.azurecr.io/$(IMAGE_NAME):latest
+    echo "✅ Latest tag pushed: serviceexampleacr.azurecr.io/$(IMAGE_NAME):latest"
+  displayName: 'Push Latest Tag'
+
+- script: |
+    echo "🎉 === DEVOPS DEMO COMPLETE === 🎉"
+    echo "✅ Self-hosted Kubernetes cluster"
+    echo "✅ Self-hosted Azure DevOps agent"
+    echo "✅ Helm chart published to ArtifactHub"
+    echo "✅ GitOps with ArgoCD"
+    echo "✅ Full CI/CD pipeline with ACR integration"
+    echo "📦 Image: serviceexampleacr.azurecr.io/$(IMAGE_NAME):$(TAG)"
+    echo "🏠 Running on: $(Agent.MachineName)"
+    echo "🔗 ACR: serviceexampleacr.azurecr.io"
+  displayName: 'Demo Complete'
