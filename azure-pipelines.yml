@@ -1,53 +1,59 @@
-# azure-pipeline.yml
+# azure-pipelines.yml
 trigger:
-  branches:
-    include:
-      - main
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
 
 variables:
-  IMAGE_NAME: 'serviceexample'
-  TAG: '$(Build.BuildId)'
+  imageRepository: 'serviceexampleacr.azurecr.io/serviceexample'
+  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
+  tag: '$(Build.BuildId)'
 
 stages:
-  - stage: BuildAndPush
-    displayName: "Build and Push to ACR"
-    jobs:
-      - job: Build
-        pool:
-          name: SelfHostedPool
-        steps:
-          - checkout: self
-            displayName: 'Checkout source code'
+- stage: Build
+  displayName: Build and Push Image
+  jobs:
+  - job: Build
+    displayName: Build Docker Image
+    steps:
+    - task: Docker@2
+      displayName: Build and push Docker image
+      inputs:
+        command: buildAndPush
+        repository: $(imageRepository)
+        dockerfile: $(dockerfilePath)
+        containerRegistry: 'serviceexampleacr'
+        tags: |
+          $(tag)
+          latest
 
-          - script: dotnet restore
-            displayName: 'Restore .NET Dependencies'
+- stage: Test
+  displayName: Run Tests
+  dependsOn: Build
+  jobs:
+  - job: Test
+    displayName: Run Unit Tests
+    steps:
+    - script: |
+        echo "Running tests would go here"
+        # Add your test commands here
+      displayName: 'Run Tests'
 
-          - script: dotnet build --configuration Release --no-restore
-            displayName: 'Build Project'
-
-          - script: dotnet test --configuration Release --verbosity minimal
-            displayName: 'Run Unit Tests'
-
-          # BUILD and PUSH in one task
-          - task: Docker@2
-            displayName: 'Build and Push to ACR'
-            inputs:
-              command: buildAndPush
-              repository: $(IMAGE_NAME)
-              dockerfile: '**/Dockerfile'
-              containerRegistry: 'serviceexampleacr'  
-              tags: |
-                $(TAG)
-                latest
-
-          # VERIFICATION
-          - task: Bash@3
-            displayName: 'Show Demo Info'
-            inputs:
-              targetType: 'inline'
-              script: |
-                echo "🎉 === DEMO READY === 🎉"
-                echo "✅ Image successfully pushed to ACR"
-                echo "📦 Image: serviceexample:$(TAG)"
-                echo "📦 Latest: serviceexample:latest"
-                echo "🔍 Check in Azure Portal under your ACR"
+- stage: Deploy
+  displayName: Deploy to Kubernetes
+  dependsOn: Test
+  condition: succeeded()
+  jobs:
+  - job: Deploy
+    displayName: Deploy Application
+    steps:
+    - task: KubernetesManifest@0
+      displayName: Deploy to Kubernetes
+      inputs:
+        action: 'deploy'
+        namespace: 'default'
+        manifests: |
+          $(Pipeline.Workspace)/manifests/*
+        imagePullSecrets: |
+          acr-secret
