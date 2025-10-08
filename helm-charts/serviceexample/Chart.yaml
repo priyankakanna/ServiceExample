@@ -1,10 +1,23 @@
 # helm-charts/serviceexample/Chart.yaml
 apiVersion: v2
 name: serviceexample
-description: A .NET application with MongoDB, Redis, and NATS
+description: A .NET application with MongoDB, Redis, and NATS using Aspire
 type: application
 version: 0.1.0
 appVersion: "1.0.0"
+
+# Add these important fields
+home: https://github.com/priyankakanna/ServiceExample
+sources:
+  - https://github.com/priyankakanna/ServiceExample
+keywords:
+  - dotnet
+  - mongodb
+  - redis
+  - nats
+  - aspire
+  - kubernetes
+  - helm
 
 dependencies:
   - name: mongodb
@@ -23,10 +36,11 @@ dependencies:
 maintainers:
   - name: priyankakanna
     email: kannapriyanka.01@gmail.com
+    url: https://github.com/priyankakanna
 
-keywords:
-  - dotnet
-  - mongodb
-  - redis
-  - nats
-  - aspire
+annotations:
+  artifacthub.io/changes: |
+    - Initial release of ServiceExample Helm chart
+  artifacthub.io/images: |
+    - name: serviceexample
+      image: serviceexampleacr.azurecr.io/serviceexample:latest
