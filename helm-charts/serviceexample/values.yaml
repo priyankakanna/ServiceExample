@@ -57,3 +57,11 @@ replicaCount: 1
 # Service Configuration
 service:
   type: ClusterIP
+
+# App Environment Configuration
+app:
+  env:
+    ASPNETCORE_ENVIRONMENT: "Production"
+    Aspire__MongoDB__Driver__ConnectionString: "mongodb://serviceexample-mongodb:27017"
+    Aspire__StackExchange__Redis__ConnectionString: "serviceexample-redis-master:6379"
+    Aspire__NATS__Net__ConnectionString: "nats://serviceexample-nats:4222"
