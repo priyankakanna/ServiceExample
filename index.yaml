@@ -9,7 +9,7 @@ entries:
           image: serviceexampleacr.azurecr.io/serviceexample:latest
     apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-10-08T14:52:14.960111291Z"
+    created: "2025-10-08T14:57:58.464410139Z"
     dependencies:
     - condition: mongodb.enabled
       name: mongodb
@@ -24,7 +24,7 @@ entries:
       repository: https://nats-io.github.io/k8s/helm/charts
       version: 1.0.0
     description: A .NET application with MongoDB, Redis, and NATS using Aspire
-    digest: 55b422bab225341500d69ff69c3344572ad83afb87a1cb0e8eac3d752d8e9e10
+    digest: 64722043c9505cdb2491bc2eddea038e5eadb927d14f4248087949cd19f1ec1b
     home: https://github.com/priyankakanna/ServiceExample
     keywords:
     - dotnet
@@ -45,4 +45,4 @@ entries:
     urls:
     - https://priyankakanna.github.io/ServiceExample/helm-repo/serviceexample-0.1.0.tgz
     version: 0.1.0
-generated: "2025-10-08T14:52:14.946109194Z"
+generated: "2025-10-08T14:57:58.450552781Z"
