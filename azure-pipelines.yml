@@ -1,4 +1,4 @@
-# azure-pipeline-demo.yml
+# azure-pipeline-simple.yml
 trigger:
   branches:
     include:
@@ -7,12 +7,12 @@ trigger:
 variables:
   IMAGE_NAME: 'serviceexample'
   TAG: '$(Build.BuildId)'
-  ACR_NAME: 'serviceexampledemo$(Build.BuildId)'  # Unique each run
-  RESOURCE_GROUP: 'azurers'
+  # Use a fixed ACR name that you create manually once
+  ACR_NAME: 'serviceexampledemo' 
 
 stages:
   - stage: BuildAndPush
-    displayName: "Create ACR, Build and Push Docker Image"
+    displayName: "Build and Push to ACR"
     jobs:
       - job: Build
         pool:
@@ -20,14 +20,6 @@ stages:
         steps:
           - checkout: self
             displayName: 'Checkout source code'
-
-          - script: |
-              echo "=== Pipeline Variables ==="
-              echo "ACR_NAME: $(ACR_NAME)"
-              echo "IMAGE_NAME: $(IMAGE_NAME)"
-              echo "TAG: $(TAG)"
-              echo "RESOURCE_GROUP: $(RESOURCE_GROUP)"
-            displayName: 'Display Pipeline Variables'
 
           - script: dotnet restore
             displayName: 'Restore .NET Dependencies'
@@ -38,92 +30,24 @@ stages:
           - script: dotnet test --configuration Release --verbosity minimal
             displayName: 'Run Unit Tests'
 
-          # CREATE ACR (Only if doesn't exist)
-          - task: AzureCLI@2
-            displayName: 'Create ACR if not exists'
+          # BUILD and PUSH in one task
+          - task: Docker@2
+            displayName: 'Build and Push to ACR'
             inputs:
-              azureSubscription: 'serviceexampleacr'
-              scriptType: 'bash'
-              scriptLocation: 'inlineScript'
-              inlineScript: |
-                echo "=== Checking if ACR '$(ACR_NAME)' exists ==="
-                
-                # Check if ACR already exists
-                if az acr show --name $(ACR_NAME) --resource-group $(RESOURCE_GROUP) &>/dev/null; then
-                  echo "✅ ACR '$(ACR_NAME)' already exists. Using existing registry."
-                else
-                  echo "=== Creating new ACR: $(ACR_NAME) ==="
-                  az acr create \
-                    --resource-group $(RESOURCE_GROUP) \
-                    --name $(ACR_NAME) \
-                    --sku Basic \
-                    --admin-enabled true \
-                    --tags "created-by=pipeline" "build-id=$(Build.BuildId)" "purpose=demo"
-                  echo "✅ ACR created successfully: $(ACR_NAME)"
-                fi
+              command: buildAndPush
+              repository: $(IMAGE_NAME)
+              dockerfile: '**/Dockerfile'
+              containerRegistry: 'serviceexampleacr'  # Your existing connection
+              tags: |
+                $(TAG)
+                latest
 
-          # GET ACR CREDENTIALS
-          - task: AzureCLI@2
-            displayName: 'Get ACR Credentials'
-            inputs:
-              azureSubscription: 'serviceexampleacr'
-              scriptType: 'bash'
-              scriptLocation: 'inlineScript'
-              inlineScript: |
-                echo "=== Getting ACR Credentials ==="
-                ACR_USERNAME=$(az acr credential show --name $(ACR_NAME) --query "username" -o tsv)
-                ACR_PASSWORD=$(az acr credential show --name $(ACR_NAME) --query "passwords[0].value" -o tsv)
-                
-                echo "##vso[task.setvariable variable=ACR_USERNAME]$ACR_USERNAME"
-                echo "##vso[task.setvariable variable=ACR_PASSWORD;issecret=true]$ACR_PASSWORD"
-                echo "✅ Credentials retrieved for $(ACR_NAME)"
-
-          # BUILD Docker Image
+          # VERIFICATION
           - task: Bash@3
-            displayName: 'Build Docker Image'
+            displayName: 'Verify Push'
             inputs:
               targetType: 'inline'
               script: |
-                echo "=== Building Docker Image ==="
-                docker build -t $(ACR_NAME).azurecr.io/$(IMAGE_NAME):$(TAG) .
-                docker tag $(ACR_NAME).azurecr.io/$(IMAGE_NAME):$(TAG) $(ACR_NAME).azurecr.io/$(IMAGE_NAME):latest
-                echo "✅ Build completed"
-                docker images | grep $(ACR_NAME)
-
-          # PUSH to ACR
-          - task: Bash@3
-            displayName: 'Push to ACR'
-            inputs:
-              targetType: 'inline'
-              script: |
-                echo "=== Starting ACR Push ==="
-                echo "ACR Name: $(ACR_NAME)"
-                echo "Image: $(ACR_NAME).azurecr.io/$(IMAGE_NAME):$(TAG)"
-                
-                # Login with admin credentials
-                echo "=== Logging into ACR ==="
-                echo "$(ACR_PASSWORD)" | docker login $(ACR_NAME).azurecr.io --username "$(ACR_USERNAME)" --password-stdin
-                
-                # Push the image
-                echo "=== Pushing Image ==="
-                docker push $(ACR_NAME).azurecr.io/$(IMAGE_NAME):$(TAG)
-                docker push $(ACR_NAME).azurecr.io/$(IMAGE_NAME):latest
-                
-                echo "✅ Push completed"
-
-          # VERIFY and SHOW DEMO INFO
-          - task: Bash@3
-            displayName: 'Verify and Show Demo Info'
-            inputs:
-              targetType: 'inline'
-              script: |
-                echo "=== Verifying in ACR ==="
-                az acr repository show-tags --name $(ACR_NAME) --repository $(IMAGE_NAME) --output table
-                
-                echo ""
                 echo "🎉 === DEMO READY === 🎉"
-                echo "📦 ACR Name: $(ACR_NAME)"
-                echo "🐳 Image: $(ACR_NAME).azurecr.io/$(IMAGE_NAME):$(TAG)"
-                echo "🔐 Login Username: $(ACR_USERNAME)"
-                echo "📋 Pull Command:"
-                echo "   docker pull $(ACR_NAME).azurecr.io/$(IMAGE_NAME):$(TAG)"
+                echo "Image pushed successfully to ACR"
+                echo "Use your existing ACR for demo"
