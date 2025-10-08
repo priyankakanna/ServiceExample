@@ -53,3 +53,7 @@ nats:
 imagePullSecrets:
   - name: acr-secret
 replicaCount: 1
+
+# Service Configuration
+service:
+  type: ClusterIP
