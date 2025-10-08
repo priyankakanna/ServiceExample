@@ -2,11 +2,10 @@
 trigger:
 - main
 
-pool: Default  # Use your self-hosted agent pool
+pool: Default
 
 variables:
   imageRepository: 'serviceexampleacr.azurecr.io/serviceexample'
-  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
   tag: '$(Build.BuildId)'
 
 stages:
@@ -14,40 +13,27 @@ stages:
   displayName: Build and Push Image
   jobs:
   - job: Build
-    displayName: Build Docker Image
+    displayName: Build Container Image
     steps:
     - script: |
-        # Install Podman (lightweight, no conflicts with containerd)
+        echo "Installing Podman..."
         sudo apt update
         sudo apt install -y podman
       displayName: 'Install Podman'
       
     - script: |
-        # Login to ACR
-        podman login $(imageRepository) --username $(acrUsername) --password $(acrPassword)
+        echo "Logging into ACR..."
+        podman login $(imageRepository) --username "$(acrUsername)" --password "$(acrPassword)"
         
-        # Build image
-        podman build -t $(imageRepository):$(tag) -f $(dockerfilePath) .
+        echo "Building image..."
+        podman build -t $(imageRepository):$(tag) -f Dockerfile .
         
-        # Push image
+        echo "Pushing image..."
         podman push $(imageRepository):$(tag)
         
-        # Also tag as latest and push
+        # Also tag as latest
         podman tag $(imageRepository):$(tag) $(imageRepository):latest
         podman push $(imageRepository):latest
-      displayName: 'Build and Push with Podman'
-      env:
-        acrUsername: $(acrUsername)
-        acrPassword: $(acrPassword)
-
-- stage: Deploy
-  displayName: Update GitOps
-  dependsOn: Build
-  jobs:
-  - job: Update
-    displayName: Trigger ArgoCD Sync
-    steps:
-    - script: |
-        echo "Image $(imageRepository):$(tag) built and pushed successfully"
-        echo "ArgoCD will automatically detect the new image and deploy it"
-      displayName: 'Notify Deployment'
+        
+        echo "Build completed successfully!"
+      displayName: 'Build and Push Image'
