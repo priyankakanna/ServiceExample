@@ -19,7 +19,36 @@ autoscaling:
 imagePullSecrets:
   - name: acr-secret
 
-# Add these other common sections that might be needed
+# MongoDB with Local Path storage
+mongodb:
+  enabled: true
+  architecture: "standalone"
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClass: "local-path"
+  auth:
+    enabled: false
+
+# Redis with Local Path storage
+redis:
+  enabled: true
+  architecture: "standalone"
+  master:
+    persistence:
+      enabled: true
+      size: 1Gi
+      storageClass: "local-path"
+  replica:
+    replication: false
+    persistence:
+      enabled: false
+
+# NATS configuration
+nats:
+  enabled: true
+
+# Add any other existing configurations you had
 nameOverride: ""
 fullnameOverride: ""
 
@@ -30,13 +59,3 @@ podSecurityContext: {}
 securityContext: {}
 
 resources: {}
-
-# Dependencies - make sure these match your Chart.yaml
-mongodb:
-  enabled: true
-
-redis:
-  enabled: true
-
-nats:
-  enabled: true
