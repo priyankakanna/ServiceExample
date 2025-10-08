@@ -4,30 +4,37 @@ trigger:
 
 pool: Default
 
-variables:
-  imageRepository: 'serviceexampleacr.azurecr.io/serviceexample'
-  tag: '$(Build.BuildId)'
-
 steps:
-- task: CmdLine@2
-  displayName: 'Install Podman'
-  inputs:
-    script: |
-      sudo apt update
-      sudo apt install -y podman
-
-- task: CmdLine@2
-  displayName: 'Login to ACR'
-  inputs:
-    script: |
-      podman login $(imageRepository) --username "$(acrUsername)" --password "$(acrPassword)"
-
-- task: CmdLine@2
-  displayName: 'Build and Push Image'
-  inputs:
-    script: |
-      podman build -t $(imageRepository):$(tag) -f Dockerfile .
-      podman push $(imageRepository):$(tag)
-      podman tag $(imageRepository):$(tag) $(imageRepository):latest
-      podman push $(imageRepository):latest
-      echo "✅ Build and push completed successfully!"
+- script: |
+    echo "=== Starting Build Process ==="
+    echo "Build ID: $(Build.BuildId)"
+    echo "Agent Version: (checking...)"
+    
+    # Install Podman
+    echo "Installing Podman..."
+    sudo apt update
+    sudo apt install -y podman
+    
+    # Build image
+    echo "Building Docker image..."
+    podman build -t serviceexampleacr.azurecr.io/serviceexample:$(Build.BuildId) -f Dockerfile .
+    
+    # Login to ACR (using environment variables)
+    echo "Logging into ACR..."
+    podman login serviceexampleacr.azurecr.io --username "$ACR_USERNAME" --password "$ACR_PASSWORD"
+    
+    # Push image
+    echo "Pushing image to ACR..."
+    podman push serviceexampleacr.azurecr.io/serviceexample:$(Build.BuildId)
+    
+    # Also push as latest
+    echo "Tagging and pushing as latest..."
+    podman tag serviceexampleacr.azurecr.io/serviceexample:$(Build.BuildId) serviceexampleacr.azurecr.io/serviceexample:latest
+    podman push serviceexampleacr.azurecr.io/serviceexample:latest
+    
+    echo "=== Build Completed Successfully! ==="
+    echo "Image: serviceexampleacr.azurecr.io/serviceexample:$(Build.BuildId)"
+  displayName: 'Build and Push Container Image'
+  env:
+    ACR_USERNAME: $(acrUsername)
+    ACR_PASSWORD: $(acrPassword)
