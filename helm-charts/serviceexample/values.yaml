@@ -19,8 +19,8 @@ app:
   port: 8080
   env:
     ASPNETCORE_ENVIRONMENT: "Production"
-    Aspire__MongoDB__Driver__ConnectionString: "mongodb://serviceexample-mongodb:27017"
-    Aspire__StackExchange__Redis__ConnectionString: "serviceexample-redis-master:6379"
+    Aspire__MongoDB__Driver__ConnectionString: "mongodb://mongo:27017"
+    Aspire__StackExchange__Redis__ConnectionString: "redis:6379"
     Aspire__NATS__Net__ConnectionString: "nats://serviceexample-nats:4222"
 
 # Resource Configuration
@@ -39,31 +39,12 @@ autoscaling:
   maxReplicas: 100
   targetCPUUtilizationPercentage: 80
 
-# Dependencies Configuration - Use working public images
+# Dependencies Configuration - Disable problematic ones for demo
 mongodb:
-  enabled: true
-  architecture: standalone
-  auth:
-    enabled: false
-  persistence:
-    enabled: false
-  image:
-    registry: docker.io
-    repository: bitnami/mongodb
-    tag: 5.0.20  # Use a version that exists
+  enabled: false
 
 redis:
-  enabled: true
-  architecture: standalone
-  auth:
-    enabled: false
-  master:
-    persistence:
-      enabled: false
-  image:
-    registry: docker.io
-    repository: bitnami/redis
-    tag: 7.2.4  # Use a version that exists
+  enabled: false
 
 nats:
   enabled: true
