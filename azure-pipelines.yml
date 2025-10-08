@@ -35,7 +35,7 @@ stages:
               command: buildAndPush
               repository: $(IMAGE_NAME)
               dockerfile: '**/Dockerfile'
-              containerRegistry: 'serviceexampleacr'  # Your existing connection
+              containerRegistry: 'serviceexampleacr'  
               tags: |
                 $(TAG)
                 latest
