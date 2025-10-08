@@ -2,62 +2,42 @@
 trigger:
 - main
 
-pool: SelfHosted
+pool: SelfHostedPool
 
 variables:
   imageRepository: 'serviceexampleacr.azurecr.io/serviceexample'
   tag: '$(Build.BuildId)'
 
-stages:
-- stage: Build
-  displayName: Build and Push Image
-  jobs:
-  - job: Build
-    displayName: Build Container Image
-    steps:
-    - script: |
-        echo "=== Starting Build Process ==="
-        echo "Build ID: $(Build.BuildId)"
-        echo "Image: $(imageRepository):$(tag)"
-        
-        # Install Podman
-        echo "Installing Podman..."
-        sudo apt update
-        sudo apt install -y podman
-        
-        # Login to ACR
-        echo "Logging into Azure Container Registry..."
-        podman login $(imageRepository) --username "$(acrUsername)" --password "$(acrPassword)"
-        
-        # Build image
-        echo "Building Docker image..."
-        podman build -t $(imageRepository):$(tag) -f Dockerfile .
-        
-        # Push image with build ID
-        echo "Pushing image to ACR..."
-        podman push $(imageRepository):$(tag)
-        
-        # Also tag and push as latest
-        echo "Tagging and pushing as latest..."
-        podman tag $(imageRepository):$(tag) $(imageRepository):latest
-        podman push $(imageRepository):latest
-        
-        echo "=== Build Completed Successfully! ==="
-        echo "Image pushed: $(imageRepository):$(tag)"
-        echo "Image pushed: $(imageRepository):latest"
-      displayName: 'Build and Push Container Image'
-
-- stage: Deploy
-  displayName: Notify Deployment
-  dependsOn: Build
-  condition: succeeded()
-  jobs:
-  - job: Notify
-    displayName: Deployment Notification
-    steps:
-    - script: |
-        echo "=== Deployment Ready ==="
-        echo "New image is available in ACR: $(imageRepository):$(tag)"
-        echo "ArgoCD will automatically detect and deploy this new version"
-        echo "Application will be updated with zero downtime"
-      displayName: 'Notify ArgoCD Deployment'
+steps:
+- script: |
+    echo "=== Starting Build Process ==="
+    echo "Build ID: $(Build.BuildId)"
+    echo "Pool: SelfHostedPool"
+    echo "Image: $(imageRepository):$(tag)"
+    
+    # Install Podman
+    echo "Installing Podman..."
+    sudo apt update
+    sudo apt install -y podman
+    
+    # Login to ACR
+    echo "Logging into Azure Container Registry..."
+    podman login $(imageRepository) --username "$(acrUsername)" --password "$(acrPassword)"
+    
+    # Build image
+    echo "Building Docker image..."
+    podman build -t $(imageRepository):$(tag) -f Dockerfile .
+    
+    # Push image with build ID
+    echo "Pushing image to ACR..."
+    podman push $(imageRepository):$(tag)
+    
+    # Also tag and push as latest
+    echo "Tagging and pushing as latest..."
+    podman tag $(imageRepository):$(tag) $(imageRepository):latest
+    podman push $(imageRepository):latest
+    
+    echo "=== Build Completed Successfully! ==="
+    echo "Image pushed: $(imageRepository):$(tag)"
+    echo "Image pushed: $(imageRepository):latest"
+  displayName: 'Build and Push Container Image'
