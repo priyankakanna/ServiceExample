@@ -48,3 +48,8 @@ nats:
     image: nats:latest
   cluster:
     enabled: false
+
+# Image Pull Secrets for ACR
+imagePullSecrets:
+  - name: acr-secret
+replicaCount: 1
