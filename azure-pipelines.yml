@@ -4,19 +4,23 @@ trigger:
 
 pool: SelfHostedPool
 
-variables:
-  imageRepository: 'serviceexampleacr.azurecr.io/serviceexample'
-  tag: '$(Build.BuildId)'
-
 steps:
+- checkout: self
+
 - script: |
-    podman login $(imageRepository) --username "$(acrUsername)" --password "$(acrPassword)"
-    podman build -t $(imageRepository):$(tag) -f Dockerfile .
-    podman push $(imageRepository):$(tag)
-    podman tag $(imageRepository):$(tag) $(imageRepository):latest
-    podman push $(imageRepository):latest
-    echo "✅ Image pushed to ACR: $(imageRepository):$(tag)"
-  displayName: 'Build and Push'
-  env:
-    acrUsername: $(acrUsername)
-    acrPassword: $(acrPassword)
+    dotnet restore
+    dotnet build --configuration Release --no-restore
+    dotnet test --configuration Release --verbosity minimal
+  displayName: 'Build and Test'
+
+- script: |
+    echo "Building container image..."
+    podman build -t serviceexample:$(Build.BuildId) -f Dockerfile .
+    echo "✅ Build completed on self-hosted agent"
+  displayName: 'Build Container'
+
+- script: |
+    echo "🎉 DEMO SUCCESS!"
+    echo "Running on: $(Agent.MachineName)"
+    echo "Pool: $(Agent.PoolName)"
+  displayName: 'Success Message'
