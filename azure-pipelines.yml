@@ -2,8 +2,7 @@
 trigger:
 - main
 
-pool:
-  vmImage: 'ubuntu-latest'
+pool: Default  # Use your self-hosted agent pool
 
 variables:
   imageRepository: 'serviceexampleacr.azurecr.io/serviceexample'
@@ -17,43 +16,38 @@ stages:
   - job: Build
     displayName: Build Docker Image
     steps:
-    - task: Docker@2
-      displayName: Build and push Docker image
-      inputs:
-        command: buildAndPush
-        repository: $(imageRepository)
-        dockerfile: $(dockerfilePath)
-        containerRegistry: 'serviceexampleacr'
-        tags: |
-          $(tag)
-          latest
-
-- stage: Test
-  displayName: Run Tests
-  dependsOn: Build
-  jobs:
-  - job: Test
-    displayName: Run Unit Tests
-    steps:
     - script: |
-        echo "Running tests would go here"
-        # Add your test commands here
-      displayName: 'Run Tests'
+        # Install Podman (lightweight, no conflicts with containerd)
+        sudo apt update
+        sudo apt install -y podman
+      displayName: 'Install Podman'
+      
+    - script: |
+        # Login to ACR
+        podman login $(imageRepository) --username $(acrUsername) --password $(acrPassword)
+        
+        # Build image
+        podman build -t $(imageRepository):$(tag) -f $(dockerfilePath) .
+        
+        # Push image
+        podman push $(imageRepository):$(tag)
+        
+        # Also tag as latest and push
+        podman tag $(imageRepository):$(tag) $(imageRepository):latest
+        podman push $(imageRepository):latest
+      displayName: 'Build and Push with Podman'
+      env:
+        acrUsername: $(acrUsername)
+        acrPassword: $(acrPassword)
 
 - stage: Deploy
-  displayName: Deploy to Kubernetes
-  dependsOn: Test
-  condition: succeeded()
+  displayName: Update GitOps
+  dependsOn: Build
   jobs:
-  - job: Deploy
-    displayName: Deploy Application
+  - job: Update
+    displayName: Trigger ArgoCD Sync
     steps:
-    - task: KubernetesManifest@0
-      displayName: Deploy to Kubernetes
-      inputs:
-        action: 'deploy'
-        namespace: 'default'
-        manifests: |
-          $(Pipeline.Workspace)/manifests/*
-        imagePullSecrets: |
-          acr-secret
+    - script: |
+        echo "Image $(imageRepository):$(tag) built and pushed successfully"
+        echo "ArgoCD will automatically detect the new image and deploy it"
+      displayName: 'Notify Deployment'
