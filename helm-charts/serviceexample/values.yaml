@@ -1,12 +1,26 @@
-# ServiceExample Helm Values
+replicaCount: 1
+
 image:
-  repository: your-app-image
+  repository: serviceexampleacr.azurecr.io/serviceexample
   tag: latest
   pullPolicy: IfNotPresent
 
-# Application Configuration
+# Image Pull Secrets for ACR
+imagePullSecrets:
+  - name: acr-secret
+
+# Service Configuration
+service:
+  type: ClusterIP
+
+# App Configuration
 app:
   port: 8080
+  env:
+    ASPNETCORE_ENVIRONMENT: "Production"
+    Aspire__MongoDB__Driver__ConnectionString: "mongodb://serviceexample-mongodb:27017"
+    Aspire__StackExchange__Redis__ConnectionString: "serviceexample-redis-master:6379"
+    Aspire__NATS__Net__ConnectionString: "nats://serviceexample-nats:4222"
 
 # Resource Configuration
 resources:
@@ -31,7 +45,9 @@ mongodb:
   auth:
     enabled: false
   persistence:
-    enabled: false  # ← ADD THIS LINE - disables PVC, uses emptyDir
+    enabled: false
+  imagePullSecrets:
+    - name: acr-secret
 
 redis:
   enabled: true
@@ -40,7 +56,9 @@ redis:
     enabled: false
   master:
     persistence:
-      enabled: false  # ← ADD THIS LINE - disables PVC, uses emptyDir
+      enabled: false
+  imagePullSecrets:
+    - name: acr-secret
 
 nats:
   enabled: true
@@ -48,20 +66,3 @@ nats:
     image: nats:latest
   cluster:
     enabled: false
-
-# Image Pull Secrets for ACR
-imagePullSecrets:
-  - name: acr-secret
-replicaCount: 1
-
-# Service Configuration
-service:
-  type: ClusterIP
-
-# App Environment Configuration
-app:
-  env:
-    ASPNETCORE_ENVIRONMENT: "Production"
-    Aspire__MongoDB__Driver__ConnectionString: "mongodb://serviceexample-mongodb:27017"
-    Aspire__StackExchange__Redis__ConnectionString: "serviceexample-redis-master:6379"
-    Aspire__NATS__Net__ConnectionString: "nats://serviceexample-nats:4222"
