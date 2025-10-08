@@ -6,4 +6,37 @@ image:
   tag: latest
   pullPolicy: IfNotPresent
 
-# ... rest of values.yaml remains the same
+# Service Configuration
+service:
+  type: ClusterIP
+  port: 80
+
+# Autoscaling Configuration
+autoscaling:
+  enabled: false
+
+# Image Pull Secrets for ACR
+imagePullSecrets:
+  - name: acr-secret
+
+# Add these other common sections that might be needed
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+
+podSecurityContext: {}
+securityContext: {}
+
+resources: {}
+
+# Dependencies - make sure these match your Chart.yaml
+mongodb:
+  enabled: true
+
+redis:
+  enabled: true
+
+nats:
+  enabled: true
