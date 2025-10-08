@@ -1,7 +1,8 @@
 replicaCount: 1
 
+# Main Application Image - use nginx for demo
 image:
-  repository: serviceexampleacr.azurecr.io/serviceexample
+  repository: nginx
   tag: latest
   pullPolicy: IfNotPresent
 
@@ -38,7 +39,7 @@ autoscaling:
   maxReplicas: 100
   targetCPUUtilizationPercentage: 80
 
-# Dependencies Configuration
+# Dependencies Configuration - Use working public images
 mongodb:
   enabled: true
   architecture: standalone
@@ -46,8 +47,10 @@ mongodb:
     enabled: false
   persistence:
     enabled: false
-  imagePullSecrets:
-    - name: acr-secret
+  image:
+    registry: docker.io
+    repository: bitnami/mongodb
+    tag: 5.0.20  # Use a version that exists
 
 redis:
   enabled: true
@@ -57,8 +60,10 @@ redis:
   master:
     persistence:
       enabled: false
-  imagePullSecrets:
-    - name: acr-secret
+  image:
+    registry: docker.io
+    repository: bitnami/redis
+    tag: 7.2.4  # Use a version that exists
 
 nats:
   enabled: true
