@@ -1,1 +1,0 @@
-docker build -t service-example -f ServiceExample\Dockerfile .
