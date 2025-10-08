@@ -8,32 +8,26 @@ variables:
   imageRepository: 'serviceexampleacr.azurecr.io/serviceexample'
   tag: '$(Build.BuildId)'
 
-stages:
-- stage: Build
-  displayName: Build and Push Image
-  jobs:
-  - job: Build
-    displayName: Build Container Image
-    steps:
-    - script: |
-        echo "Installing Podman..."
-        sudo apt update
-        sudo apt install -y podman
-      displayName: 'Install Podman'
-      
-    - script: |
-        echo "Logging into ACR..."
-        podman login $(imageRepository) --username "$(acrUsername)" --password "$(acrPassword)"
-        
-        echo "Building image..."
-        podman build -t $(imageRepository):$(tag) -f Dockerfile .
-        
-        echo "Pushing image..."
-        podman push $(imageRepository):$(tag)
-        
-        # Also tag as latest
-        podman tag $(imageRepository):$(tag) $(imageRepository):latest
-        podman push $(imageRepository):latest
-        
-        echo "Build completed successfully!"
-      displayName: 'Build and Push Image'
+steps:
+- task: CmdLine@2
+  displayName: 'Install Podman'
+  inputs:
+    script: |
+      sudo apt update
+      sudo apt install -y podman
+
+- task: CmdLine@2
+  displayName: 'Login to ACR'
+  inputs:
+    script: |
+      podman login $(imageRepository) --username "$(acrUsername)" --password "$(acrPassword)"
+
+- task: CmdLine@2
+  displayName: 'Build and Push Image'
+  inputs:
+    script: |
+      podman build -t $(imageRepository):$(tag) -f Dockerfile .
+      podman push $(imageRepository):$(tag)
+      podman tag $(imageRepository):$(tag) $(imageRepository):latest
+      podman push $(imageRepository):latest
+      echo "✅ Build and push completed successfully!"
