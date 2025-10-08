@@ -9,7 +9,7 @@ variables:
 
 stages:
   - stage: BuildAndPush
-    displayName: "Build and Push Docker Image"
+    displayName: "Build and Push Docker Image into ACR"
     jobs:
       - job: Build
         pool:
