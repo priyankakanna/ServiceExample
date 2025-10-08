@@ -1,9 +1,15 @@
 apiVersion: v1
 entries:
   serviceexample:
-  - apiVersion: v2
+  - annotations:
+      artifacthub.io/changes: |
+        - Initial release of ServiceExample Helm chart
+      artifacthub.io/images: |
+        - name: serviceexample
+          image: serviceexampleacr.azurecr.io/serviceexample:latest
+    apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-10-08T14:27:05.567387787+03:00"
+    created: "2025-10-08T13:56:17.45185601Z"
     dependencies:
     - condition: mongodb.enabled
       name: mongodb
@@ -17,20 +23,26 @@ entries:
       name: nats
       repository: https://nats-io.github.io/k8s/helm/charts
       version: 1.0.0
-    description: A .NET application with MongoDB, Redis, and NATS
-    digest: e129b60805bca44a649fa92466d1e87ef2eaef535b585272a8a7186fdab9b65f
+    description: A .NET application with MongoDB, Redis, and NATS using Aspire
+    digest: 209709a4a6bf332deafe4189b186f007f6174071b61b5b34977a3343d5ca6a3b
+    home: https://github.com/priyankakanna/ServiceExample
     keywords:
     - dotnet
     - mongodb
     - redis
     - nats
     - aspire
+    - kubernetes
+    - helm
     maintainers:
     - email: kannapriyanka.01@gmail.com
       name: priyankakanna
+      url: https://github.com/priyankakanna
     name: serviceexample
+    sources:
+    - https://github.com/priyankakanna/ServiceExample
     type: application
     urls:
     - https://priyankakanna.github.io/ServiceExample/helm-repo/serviceexample-0.1.0.tgz
     version: 0.1.0
-generated: "2025-10-08T14:27:05.55099047+03:00"
+generated: "2025-10-08T13:56:17.437730049Z"
