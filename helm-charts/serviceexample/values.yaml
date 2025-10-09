@@ -6,98 +6,84 @@ image:
   tag: latest
   pullPolicy: IfNotPresent
 
-# Service Configuration
+# Service Configuration - Match your Docker setup
 service:
   type: ClusterIP
-  port: 80
-
-# Autoscaling Configuration
-autoscaling:
-  enabled: false
+  port: 9080  # Your application port
+  targetPort: 9080  # Container port
 
 # Image Pull Secrets for ACR
 imagePullSecrets:
   - name: acr-secret
 
-# MongoDB with correct image configuration
+# MongoDB - exact match to docker-compose
 mongodb:
   enabled: true
-  architecture: "standalone"
   image:
-    registry: docker.io
-    repository: bitnami/mongodb
-    tag: "7.0"
+    repository: mongo
+    tag: latest
     pullPolicy: IfNotPresent
   persistence:
     enabled: true
     size: 1Gi
     storageClass: "local-path"
-  auth:
-    enabled: false
 
-# Redis with correct image configuration
+# Redis - exact match to docker-compose  
 redis:
   enabled: true
-  architecture: "standalone"
   image:
-    registry: docker.io
-    repository: bitnami/redis
-    tag: "7.2"
+    repository: redis
+    tag: latest
     pullPolicy: IfNotPresent
   master:
     persistence:
       enabled: true
       size: 1Gi
       storageClass: "local-path"
-  replica:
-    replication: false
-    persistence:
-      enabled: false
 
-# NATS configuration
+# NATS - exact match to docker-compose
 nats:
   enabled: true
+  image:
+    repository: nats
+    tag: latest
+    pullPolicy: IfNotPresent
 
-# Application health checks with longer delays for .NET app
+# Environment variables - EXACT match to docker-compose
+env:
+  - name: ASPNETCORE_ENVIRONMENT
+    value: "Production"
+  - name: ASPNETCORE_URLS
+    value: "http://+:9080"  # Exact match to Dockerfile
+  - name: Aspire__MongoDB__Driver__ConnectionString
+    value: "mongodb://serviceexample-mongodb:27017"  # K8s service name
+  - name: Aspire__StackExchange__Redis__ConnectionString
+    value: "serviceexample-redis-master:6379"  # K8s service name  
+  - name: Aspire__NATS__Net__ConnectionString
+    value: "nats://serviceexample-nats:4222"  # K8s service name
+
+# Health checks - fixed for port 9080
 livenessProbe:
   httpGet:
     path: /
-    port: http
-  initialDelaySeconds: 30
+    port: 9080  # Your application port
+  initialDelaySeconds: 30  # Give .NET app time to start
   periodSeconds: 10
   timeoutSeconds: 5
-  failureThreshold: 3
 
 readinessProbe:
   httpGet:
     path: /
-    port: http
-  initialDelaySeconds: 20
+    port: 9080  # Your application port
+  initialDelaySeconds: 15
   periodSeconds: 5
   timeoutSeconds: 3
-  failureThreshold: 3
 
-# Additional configurations
-nameOverride: ""
-fullnameOverride: ""
+# Disable autoscaling for demo
+autoscaling:
+  enabled: false
 
-serviceAccount:
-  create: true
-  automount: true
-
-podSecurityContext: 
-  fsGroup: 1001
-  runAsUser: 1001
-  runAsNonRoot: true
-
-securityContext:
-  capabilities:
-    drop:
-    - ALL
-  readOnlyRootFilesystem: true
-  runAsNonRoot: true
-  runAsUser: 1001
-
+# Basic resources
 resources:
   requests:
     memory: "256Mi"
@@ -106,146 +92,8 @@ resources:
     memory: "512Mi"
     cpu: "500m"
 
-# Node selector and affinity (optional)
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
-
-# Ingress configuration (optional)
-ingress:
-  enabled: false
-  className: ""
-  annotations: {}
-  hosts:
-    - host: serviceexample.local
-      paths:
-        - path: /
-          pathType: Prefix
-  tls: []
-
-# Environment variables for the application
-env:
-  - name: ASPNETCORE_ENVIRONMENT
-    value: "Production"
-  - name: ASPNETCORE_URLS
-    value: "http://*:80"
-  - name: ConnectionStrings__MongoDB
-    value: "mongodb://serviceexample-mongodb:27017"
-  - name: ConnectionStrings__Redis
-    value: "serviceexample-redis-master:6379"
-  - name: ConnectionStrings__NATS
-    value: "nats://serviceexample-nats:4222"
-
-# Additional service configurations
-extraServices: []
-
-# Pod Disruption Budget
-pdb:
-  create: false
-  minAvailable: 1
-  maxUnavailable: ""
-
-# Network policies
-networkPolicy:
-  enabled: false
-  ingress: []
-
-# Service monitor for Prometheus (if using monitoring)
-serviceMonitor:
-  enabled: false
-  namespace: ""
-  interval: 30s
-  scrapeTimeout: 10s
-  labels: {}
-  annotations: {}
-
-# Pod annotations
-podAnnotations: {}
-
-# Pod labels
-podLabels: {}
-
-# Security context for containers
-containerSecurityContext:
+# Security - non-root user (matches your Dockerfile APP_UID)
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 10000
   allowPrivilegeEscalation: false
-  capabilities:
-    drop:
-    - ALL
-
-# Lifecycle hooks (optional)
-lifecycle:
-  preStop:
-    exec:
-      command: ["/bin/sh", "-c", "sleep 10"]
-
-# Topology spread constraints (optional)
-topologySpreadConstraints: []
-
-# Additional volumes and volume mounts (optional)
-extraVolumes: []
-extraVolumeMounts: []
-
-# Init containers (optional)
-initContainers: []
-
-# Sidecar containers (optional)
-sidecarContainers: []
-
-# Additional pod spec fields
-podSpec: {}
-
-# Horizontal Pod Autoscaler configuration
-hpa:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 10
-  targetCPUUtilizationPercentage: 80
-  targetMemoryUtilizationPercentage: 80
-
-# Pod priority class name
-priorityClassName: ""
-
-# Termination grace period
-terminationGracePeriodSeconds: 30
-
-# DNS configuration
-dnsConfig: {}
-
-# Host aliases
-hostAliases: []
-
-# Security - Pod Security Standards
-seccompProfile:
-  type: RuntimeDefault
-
-# Additional container ports (if your app uses multiple ports)
-extraPorts: []
-
-# Command and args overrides (optional)
-command: []
-args: []
-
-# ConfigMap and Secret references (optional)
-configMapRefs: []
-secretRefs: []
-
-# Liveness and readiness probe overrides
-customLivenessProbe: {}
-customReadinessProbe: {}
-
-# Startup probe (for slow-starting applications)
-startupProbe:
-  httpGet:
-    path: /
-    port: http
-  initialDelaySeconds: 60
-  periodSeconds: 10
-  failureThreshold: 30
-
-# Additional environment variables from secrets or configmaps
-envFrom: []
-
-# Resource claims (for dynamic resource management)
-claims: []
