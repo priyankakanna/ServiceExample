@@ -19,19 +19,6 @@ keywords:
   - kubernetes
   - helm
 
-dependencies:
-  - name: mongodb
-    version: "14.0.0"
-    repository: "https://charts.bitnami.com/bitnami"
-    condition: mongodb.enabled
-  - name: redis
-    version: "18.0.0"
-    repository: "https://charts.bitnami.com/bitnami"
-    condition: redis.enabled
-  - name: nats
-    version: "1.0.0"
-    repository: "https://nats-io.github.io/k8s/helm/charts"
-    condition: nats.enabled
 
 maintainers:
   - name: priyankakanna

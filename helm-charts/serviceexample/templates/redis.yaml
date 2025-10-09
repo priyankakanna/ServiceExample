@@ -1,0 +1,64 @@
+{{- if .Values.redis.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "serviceexample.fullname" . }}-redis
+  labels:
+    {{- include "serviceexample.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "serviceexample.name" . }}-redis
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "serviceexample.name" . }}-redis
+    spec:
+      containers:
+      - name: redis
+        image: {{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}
+        imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
+        ports:
+        - containerPort: 6379
+        command: ["redis-server"]
+        args: ["--appendonly", "yes"]
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+      volumes:
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: {{ include "serviceexample.fullname" . }}-redis
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "serviceexample.fullname" . }}-redis
+  labels:
+    {{- include "serviceexample.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  ports:
+  - port: 6379
+    targetPort: 6379
+  selector:
+    app.kubernetes.io/name: {{ include "serviceexample.name" . }}-redis
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "serviceexample.fullname" . }}-redis
+  labels:
+    {{- include "serviceexample.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.redis.master.persistence.size }}
+  {{- if .Values.redis.master.persistence.storageClass }}
+  storageClassName: {{ .Values.redis.master.persistence.storageClass }}
+  {{- end }}
+{{- end }}
