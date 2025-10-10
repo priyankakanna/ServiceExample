@@ -26,3 +26,10 @@ http://localhost:9080/api/Person
 
 Dockerfile is provided to build the image. 
 Also, docker-compose.yaml is provided to run it locally with required dependencies.
+## ✅ Bonus: Helm Chart Signing
+Helm charts are cryptographically signed using GPG for security and provenance verification.
+- **Signed Chart**: serviceexample-0.1.0.tgz with GPG signature
+- **Verification**: `helm verify` confirms authenticity and integrity
+- **Key Management**: GPG key pair with fingerprint 7CB87B03...
+
+See [HELM_SIGNING.md](HELM_SIGNING.md) for implementation details.
