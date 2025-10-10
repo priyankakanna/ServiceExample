@@ -22,6 +22,7 @@ public class Sender : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
             var person = _fixture.Build<Person>()
+                .Without(p => p.Id)
                 .With(p => p.CreatedAt, DateTime.Now)
                 .With(p => p.FirstName, GetRandomFirstName())
                 .With(p => p.LastName, GetRandomLastName())
