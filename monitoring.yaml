@@ -1,0 +1,12 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: serviceexample-monitor
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: serviceexample
+  endpoints:
+  - port: http
+    interval: 30s

@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: serviceexample
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: serviceexample
+  template:
+    metadata:
+      labels:
+        app: serviceexample
+    spec:
+      imagePullSecrets:
+      - name: acr-secret
+      containers:
+      - name: serviceexample
+        image: serviceexampleacr.azurecr.io/serviceexample:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 9080
+        env:
+        - name: ASPNETCORE_URLS
+          value: "http://+:9080"
+        - name: Aspire__MongoDB__Driver__ConnectionString
+          value: "mongodb://mongodb:27017"
+        - name: Aspire__StackExchange__Redis__ConnectionString
+          value: "redis:6379"
+        - name: Aspire__NATS__Net__ConnectionString
+          value: "nats://nats:4222"
+        - name: DOTNET_ENVIRONMENT
+          value: "Development"
+        - name: ASPNETCORE_Kestrel__Endpoints__Http__Url
+          value: "http://0.0.0.0:9080"
+        # Add startup probe to wait for Kestrel
+        startupProbe:
+          tcpSocket:
+            port: 9080
+          failureThreshold: 30
+          periodSeconds: 10
+        # Remove liveness/readiness initially
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"

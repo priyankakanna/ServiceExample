@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: serviceexample
+  labels:
+    app: serviceexample
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: serviceexample
+  template:
+    metadata:
+      labels:
+        app: serviceexample
+    spec:
+      imagePullSecrets:
+      - name: acr-secret
+      initContainers:
+      - name: wait-for-dependencies
+        image: busybox:1.28
+        command: ['sh', '-c', 'until nslookup serviceexample-mongodb; do echo waiting for mongodb; sleep 2; done; until nslookup serviceexample-redis; do echo waiting for redis; sleep 2; done; until nslookup serviceexample-nats; do echo waiting for nats; sleep 2; done']
+      containers:
+      - name: serviceexample
+        image: serviceexampleacr.azurecr.io/serviceexample:latest
+        ports:
+        - containerPort: 9080
+        env:
+        - name: ASPNETCORE_URLS
+          value: "http://+:9080"
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Development"
+        - name: DOTNET_ENVIRONMENT
+          value: "Development"
+        - name: Aspire__MongoDB__Driver__ConnectionString
+          value: "mongodb://serviceexample-mongodb:27017"
+        - name: Aspire__StackExchange__Redis__ConnectionString
+          value: "serviceexample-redis:6379"
+        - name: Aspire__NATS__Net__ConnectionString
+          value: "nats://serviceexample-nats:4222"
+        # Web server health checks
+        livenessProbe:
+          httpGet:
+            path: /swagger/index.html
+            port: 9080
+          initialDelaySeconds: 40
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /swagger/index.html
+            port: 9080
+          initialDelaySeconds: 30
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
