@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nats-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  nats-dashboard.json: |-
+    {
+      "dashboard": {
+        "id": null,
+        "title": "NATS Metrics",
+        "tags": ["nats", "monitoring"],
+        "timezone": "browser",
+        "panels": [],
+        "version": 1
+      }
+    }

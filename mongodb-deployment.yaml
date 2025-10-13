@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    argocd.argoproj.io/tracking-id: serviceexample:apps/Deployment:default/serviceexample-mongodb
+    deployment.kubernetes.io/revision: "2"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{"argocd.argoproj.io/tracking-id":"serviceexample:apps/Deployment:default/serviceexample-mongodb"},"labels":{"app.kubernetes.io/component":"mongodb","app.kubernetes.io/instance":"serviceexample","app.kubernetes.io/managed-by":"Helm","app.kubernetes.io/name":"serviceexample","app.kubernetes.io/version":"1.0.0","helm.sh/chart":"serviceexample-0.1.0"},"name":"serviceexample-mongodb","namespace":"default"},"spec":{"replicas":1,"selector":{"matchLabels":{"app.kubernetes.io/name":"serviceexample-mongodb"}},"template":{"metadata":{"labels":{"app.kubernetes.io/name":"serviceexample-mongodb"}},"spec":{"containers":[{"env":[{"name":"MONGO_INITDB_DATABASE","value":"serviceexample"}],"image":"mongo:latest","imagePullPolicy":"IfNotPresent","name":"mongodb","ports":[{"containerPort":27017}],"volumeMounts":[{"mountPath":"/data/db","name":"mongodb-data"}]}],"volumes":[{"name":"mongodb-data","persistentVolumeClaim":{"claimName":"serviceexample-mongodb"}}]}}}}
+  creationTimestamp: "2025-10-10T08:40:21Z"
+  generation: 2
+  labels:
+    app.kubernetes.io/component: mongodb
+    app.kubernetes.io/instance: serviceexample
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: serviceexample
+    app.kubernetes.io/version: 1.0.0
+    helm.sh/chart: serviceexample-0.1.0
+  name: serviceexample-mongodb
+  namespace: default
+  resourceVersion: "60928"
+  uid: 498d954e-3b71-4b16-acb8-dcb980842960
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: serviceexample-mongodb
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: mongodb
+        app.kubernetes.io/name: serviceexample-mongodb
+    spec:
+      containers:
+      - env:
+        - name: MONGO_INITDB_DATABASE
+          value: serviceexample
+        image: mongo:latest
+        imagePullPolicy: IfNotPresent
+        name: mongodb
+        ports:
+        - containerPort: 27017
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /data/db
+          name: mongodb-data
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: mongodb-data
+        persistentVolumeClaim:
+          claimName: serviceexample-mongodb
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2025-10-10T08:40:21Z"
+    lastUpdateTime: "2025-10-10T08:57:46Z"
+    message: ReplicaSet "serviceexample-mongodb-788cf69b47" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  - lastTransitionTime: "2025-10-10T09:31:42Z"
+    lastUpdateTime: "2025-10-10T09:31:42Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  observedGeneration: 2
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

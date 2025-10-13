@@ -97,3 +97,17 @@ securityContext:
   runAsNonRoot: true
   runAsUser: 10000
   allowPrivilegeEscalation: false
+
+nats:
+  enabled: true
+  image:
+    repository: nats
+    tag: "alpine"
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"

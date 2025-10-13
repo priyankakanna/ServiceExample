@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    argocd.argoproj.io/tracking-id: serviceexample:apps/Deployment:default/serviceexample-redis
+    deployment.kubernetes.io/revision: "2"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{"argocd.argoproj.io/tracking-id":"serviceexample:apps/Deployment:default/serviceexample-redis"},"labels":{"app.kubernetes.io/component":"redis","app.kubernetes.io/instance":"serviceexample","app.kubernetes.io/managed-by":"Helm","app.kubernetes.io/name":"serviceexample","app.kubernetes.io/version":"1.0.0","helm.sh/chart":"serviceexample-0.1.0"},"name":"serviceexample-redis","namespace":"default"},"spec":{"replicas":1,"selector":{"matchLabels":{"app.kubernetes.io/name":"serviceexample-redis"}},"template":{"metadata":{"labels":{"app.kubernetes.io/name":"serviceexample-redis"}},"spec":{"containers":[{"args":["--appendonly","yes"],"command":["redis-server"],"image":"redis:latest","imagePullPolicy":"IfNotPresent","name":"redis","ports":[{"containerPort":6379}],"volumeMounts":[{"mountPath":"/data","name":"redis-data"}]}],"volumes":[{"name":"redis-data","persistentVolumeClaim":{"claimName":"serviceexample-redis"}}]}}}}
+  creationTimestamp: "2025-10-09T07:49:59Z"
+  generation: 2
+  labels:
+    app.kubernetes.io/component: redis
+    app.kubernetes.io/instance: serviceexample
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: serviceexample
+    app.kubernetes.io/version: 1.0.0
+    helm.sh/chart: serviceexample-0.1.0
+  name: serviceexample-redis
+  namespace: default
+  resourceVersion: "47461"
+  uid: 5c4dec78-f31c-4fac-a42b-82989eef339f
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: serviceexample-redis
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/restartedAt: "2025-10-10T11:00:54+03:00"
+      labels:
+        app.kubernetes.io/name: serviceexample-redis
+    spec:
+      containers:
+      - args:
+        - --appendonly
+        - "yes"
+        command:
+        - redis-server
+        - "--requirepass"
+        - "$(REDIS_PASSWORD)"
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-auth
+              key: password
+        image: redis:latest
+        imagePullPolicy: IfNotPresent
+        name: redis
+        ports:
+        - containerPort: 6379
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /data
+          name: redis-data
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: serviceexample-redis
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2025-10-10T08:07:35Z"
+    lastUpdateTime: "2025-10-10T08:07:35Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2025-10-09T07:49:59Z"
+    lastUpdateTime: "2025-10-10T08:07:36Z"
+    message: ReplicaSet "serviceexample-redis-6dc9f6f57b" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 2
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

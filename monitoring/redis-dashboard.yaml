@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  redis-dashboard.json: |-
+    {
+      "dashboard": {
+        "id": null,
+        "title": "Redis Metrics",
+        "tags": ["redis", "monitoring"],
+        "timezone": "browser",
+        "panels": [],
+        "version": 1
+      }
+    }
