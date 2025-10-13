@@ -25,6 +25,7 @@ spec:
             - name: http
               containerPort: 9080
               protocol: TCP
+          command: ["/bin/sh", "-c", "while true; do dotnet ServiceExample.dll; sleep 10; done"]
           livenessProbe:
             tcpSocket:
               port: 9080
