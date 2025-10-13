@@ -15,67 +15,26 @@ imagePullSecrets:
 
 mongodb:
   enabled: true
-  image:
-    repository: mongo
-    tag: latest
-    pullPolicy: IfNotPresent
-  persistence:
-    enabled: true
-    size: 1Gi
-    storageClass: "local-path"
 
 redis:
   enabled: true
-  image:
-    repository: redis
-    tag: latest
-    pullPolicy: IfNotPresent
-  master:
-    persistence:
-      enabled: true
-      size: 1Gi
-      storageClass: "local-path"
 
 nats:
   enabled: true
-  image:
-    repository: nats
-    tag: alpine
-    pullPolicy: IfNotPresent
-  resources:
-    requests:
-      memory: "128Mi"
-      cpu: "100m"
-    limits:
-      memory: "256Mi"
-      cpu: "200m"
 
 livenessProbe:
   tcpSocket:
     port: 9080
   initialDelaySeconds: 30
   periodSeconds: 10
-  timeoutSeconds: 5
 
 readinessProbe:
   tcpSocket:
     port: 9080
   initialDelaySeconds: 15
   periodSeconds: 5
-  timeoutSeconds: 3
-
-autoscaling:
-  enabled: false
 
 resources:
   requests:
     memory: "256Mi"
-    cpu: "250m"
-  limits:
-    memory: "512Mi"
-    cpu: "500m"
-
-securityContext:
-  runAsNonRoot: true
-  runAsUser: 10000
-  allowPrivilegeEscalation: false
+    cpu: "100m"
