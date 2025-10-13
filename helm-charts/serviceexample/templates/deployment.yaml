@@ -30,24 +30,28 @@ spec:
               protocol: TCP
           livenessProbe:
             httpGet:
-              path: /
-              port: http
-            initialDelaySeconds: 10
+              path: /health
+              port: 9080
+            initialDelaySeconds: 30
             periodSeconds: 10
+            failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /
-              port: http
-            initialDelaySeconds: 5
+              path: /health
+              port: 9080
+            initialDelaySeconds: 15
             periodSeconds: 5
+            failureThreshold: 3
           env:
             - name: ASPNETCORE_ENVIRONMENT
               value: "Production"
+            - name: ASPNETCORE_URLS
+              value: "http://*:9080"
             - name: Aspire__MongoDB__Driver__ConnectionString
-              value: "mongodb://mongo:27017"
+              value: "mongodb://{{ include "serviceexample.fullname" . }}-mongodb:27017"
             - name: Aspire__StackExchange__Redis__ConnectionString
-              value: "redis:6379"
+              value: "{{ include "serviceexample.fullname" . }}-redis:6379"
             - name: Aspire__NATS__Net__ConnectionString
-              value: "nats://serviceexample-nats:4222"
+              value: "nats://{{ include "serviceexample.fullname" . }}-nats:4222"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

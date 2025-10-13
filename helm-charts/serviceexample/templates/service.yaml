@@ -8,7 +8,7 @@ spec:
   type: {{ .Values.service.type | default "ClusterIP" }}
   ports:
     - port: 9080  # Service exposes port 9080
-      targetPort: http  # Maps to container port named "http" (80)
+      targetPort: 9080  # Maps to container port 9080 (NOT "http")
       protocol: TCP
       name: http
   selector:

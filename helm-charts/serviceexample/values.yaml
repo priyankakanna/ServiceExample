@@ -111,3 +111,18 @@ nats:
     limits:
       memory: "256Mi"
       cpu: "200m"
+
+# NATS Configuration
+nats:
+  enabled: true
+  image:
+    repository: nats
+    tag: "alpine"
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
