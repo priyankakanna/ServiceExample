@@ -1,4 +1,3 @@
-# helm-charts/serviceexample/Chart.yaml
 apiVersion: v2
 name: serviceexample
 description: A .NET application with MongoDB, Redis, and NATS using Aspire
@@ -6,7 +5,6 @@ type: application
 version: 0.1.0
 appVersion: "1.0.0"
 
-# Add these important fields
 home: https://github.com/priyankakanna/ServiceExample
 sources:
   - https://github.com/priyankakanna/ServiceExample
@@ -18,7 +16,6 @@ keywords:
   - aspire
   - kubernetes
   - helm
-
 
 maintainers:
   - name: priyankakanna

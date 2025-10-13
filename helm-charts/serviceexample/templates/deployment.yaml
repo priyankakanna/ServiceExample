@@ -1,51 +1,36 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "serviceexample.fullname" . }}
+  name: {{ .Release.Name }}
   labels:
-    {{- include "serviceexample.labels" . | nindent 4 }}
+    app: {{ .Release.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      {{- include "serviceexample.selectorLabels" . | nindent 6 }}
+      app: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        {{- include "serviceexample.selectorLabels" . | nindent 8 }}
+        app: {{ .Release.Name }}
     spec:
+      {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
-      - name: {{ .Values.image.pullSecretName }}
-      hostNetwork: true
+      - name: {{ .Values.imagePullSecrets }}
+      {{- end }}
       containers:
-        - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports:
-            - name: http
-              containerPort: 9080
-              protocol: TCP
-          command: ["/bin/sh", "-c", "while true; do dotnet ServiceExample.dll; sleep 10; done"]
-          livenessProbe:
-            tcpSocket:
-              port: 9080
-            initialDelaySeconds: 30
-            periodSeconds: 10
-          readinessProbe:
-            tcpSocket:
-              port: 9080
-            initialDelaySeconds: 15
-            periodSeconds: 5
-          env:
-            - name: ASPNETCORE_ENVIRONMENT
-              value: "Production"
-            - name: ASPNETCORE_URLS
-              value: "http://*:9080"
-            - name: Aspire__MongoDB__Driver__ConnectionString
-              value: "mongodb://{{ include "serviceexample.fullname" . }}-mongodb:27017"
-            - name: Aspire__StackExchange__Redis__ConnectionString
-              value: "{{ include "serviceexample.fullname" . }}-redis:6379"
-            - name: Aspire__NATS__Net__ConnectionString
-              value: "nats://192.168.1.116:4222"
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+      - name: {{ .Release.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: 9080
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Production"
+        - name: ASPNETCORE_URLS
+          value: "http://*:9080"
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}

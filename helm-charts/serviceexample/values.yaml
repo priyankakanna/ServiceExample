@@ -8,33 +8,13 @@ image:
 service:
   type: ClusterIP
   port: 9080
-  targetPort: 9080
 
-imagePullSecrets:
-  - name: acr-secret
-
-mongodb:
-  enabled: true
-
-redis:
-  enabled: true
-
-nats:
-  enabled: true
-
-livenessProbe:
-  tcpSocket:
-    port: 9080
-  initialDelaySeconds: 30
-  periodSeconds: 10
-
-readinessProbe:
-  tcpSocket:
-    port: 9080
-  initialDelaySeconds: 15
-  periodSeconds: 5
+imagePullSecrets: acr-secret
 
 resources:
   requests:
     memory: "256Mi"
     cpu: "100m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"
