@@ -11,6 +11,37 @@ service:
 
 imagePullSecrets: acr-secret
 
+# Add StatefulSet configuration
+statefulset:
+  enabled: true
+  storage:
+    size: 1Gi
+    storageClass: "longhorn"
+
+# Add MongoDB StatefulSet configuration
+mongodb:
+  enabled: true
+  storage:
+    size: 5Gi
+    storageClass: "longhorn"
+
+# Add Redis configuration
+redis:
+  enabled: true
+
+# Add NATS configuration  
+nats:
+  enabled: true
+
+# Add the missing environment variables
+app:
+  env:
+    ASPNETCORE_ENVIRONMENT: "Production"
+    ASPNETCORE_URLS: "http://*:9080"
+    Aspire__MongoDB__Driver__ConnectionString: "mongodb://mongo:27017"
+    Aspire__StackExchange__Redis__ConnectionString: "redis:6379"
+    Aspire__NATS__Net__ConnectionString: "nats://nats:4222"
+
 resources:
   requests:
     memory: "256Mi"

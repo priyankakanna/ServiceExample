@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ .Release.Name }}
   labels:
@@ -8,6 +8,7 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
+  serviceName: {{ .Release.Name }}-headless
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
@@ -32,5 +33,20 @@ spec:
           value: "Production"
         - name: ASPNETCORE_URLS
           value: "http://*:9080"
+        - name: Aspire__MongoDB__Driver__ConnectionString
+          value: {{ .Values.app.env.Aspire__MongoDB__Driver__ConnectionString | quote }}
+        - name: Aspire__StackExchange__Redis__ConnectionString
+          value: {{ .Values.app.env.Aspire__StackExchange__Redis__ConnectionString | quote }}
+        - name: Aspire__NATS__Net__ConnectionString
+          value: {{ .Values.app.env.Aspire__NATS__Net__ConnectionString | quote }}
         resources:
           {{- toYaml .Values.resources | nindent 12 }}
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "longhorn"
+      resources:
+        requests:
+          storage: 1Gi
