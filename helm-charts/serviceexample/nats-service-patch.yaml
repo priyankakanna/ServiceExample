@@ -1,8 +1,0 @@
-spec:
-  ports:
-  - name: nats
-    port: 4222
-    targetPort: nats
-  - name: metrics
-    port: 8222
-    targetPort: monitor
