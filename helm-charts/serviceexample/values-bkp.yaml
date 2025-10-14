@@ -9,12 +9,7 @@ service:
   type: ClusterIP  # Keep as ClusterIP for Ingress
   port: 9080
 
-# === TLS CONFIGURATION ===
-tls:
-  enabled: true
-  issuer: self-signed-issuer
-
-# === INGRESS CONFIGURATION ===
+# === ADD INGRESS CONFIGURATION HERE ===
 ingress:
   enabled: true
   className: "nginx"
@@ -27,41 +22,33 @@ ingress:
         - path: /
           pathType: Prefix
   tls: []  # No TLS for demo
+# === END INGRESS CONFIGURATION ===
 
 imagePullSecrets: acr-secret
 
-# === STATEFULSET CONFIGURATION ===
+# Add StatefulSet configuration
 statefulset:
   enabled: true
   storage:
     size: 1Gi
     storageClass: "longhorn"
 
-# === MONGODB CONFIGURATION ===
+# Add MongoDB StatefulSet configuration
 mongodb:
   enabled: true
   storage:
     size: 5Gi
     storageClass: "longhorn"
-  tls:
-    enabled: true
-    secretName: "mongodb-tls"
 
-# === REDIS CONFIGURATION ===
+# Add Redis configuration
 redis:
   enabled: true
-  tls:
-    enabled: true
-    secretName: "redis-tls"
 
-# === NATS CONFIGURATION ===
+# Add NATS configuration  
 nats:
   enabled: true
-  tls:
-    enabled: true
-    secretName: "nats-tls"
 
-# === APPLICATION CONFIGURATION ===
+# Add the missing environment variables
 app:
   env:
     ASPNETCORE_ENVIRONMENT: "Production"
@@ -70,7 +57,6 @@ app:
     Aspire__StackExchange__Redis__ConnectionString: "redis:6379"
     Aspire__NATS__Net__ConnectionString: "nats://nats:4222"
 
-# === RESOURCES CONFIGURATION ===
 resources:
   requests:
     memory: "256Mi"
@@ -78,11 +64,3 @@ resources:
   limits:
     memory: "512Mi"
     cpu: "500m"
-
-# === AUTOSCALING CONFIGURATION ===
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80

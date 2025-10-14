@@ -19,6 +19,33 @@ spec:
         image: redis:latest
         ports:
         - containerPort: 6379
+        # TLS Configuration for Redis
+        env:
+        - name: REDIS_SSL_ENABLED
+          value: "true"
+        volumeMounts:
+        - name: tls-certs
+          mountPath: /etc/ssl/certs
+          readOnly: true
+        command:
+        - redis-server
+        - "--tls-port"
+        - "6379"
+        - "--port"
+        - "0"
+        - "--tls-cert-file"
+        - "/etc/ssl/certs/tls.crt"
+        - "--tls-key-file"
+        - "/etc/ssl/certs/tls.key"
+        - "--tls-ca-cert-file"
+        - "/etc/ssl/certs/ca.crt"
+        - "--tls-auth-clients"
+        - "no"  # For demo purposes
+      volumes:
+      - name: tls-certs
+        secret:
+          secretName: redis-tls
+
 ---
 apiVersion: v1
 kind: Service

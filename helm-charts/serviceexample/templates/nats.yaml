@@ -19,6 +19,28 @@ spec:
         image: nats:latest
         ports:
         - containerPort: 4222
+        # TLS Configuration for NATS
+        env:
+        - name: NATS_TLS
+          value: "true"
+        volumeMounts:
+        - name: tls-certs
+          mountPath: /etc/ssl/certs
+          readOnly: true
+        command:
+        - nats-server
+        - "--tls"
+        - "--tlscert"
+        - "/etc/ssl/certs/tls.crt"
+        - "--tlskey"
+        - "/etc/ssl/certs/tls.key"
+        - "--tlsverify"
+        - "false"  # For demo purposes
+      volumes:
+      - name: tls-certs
+        secret:
+          secretName: nats-tls
+
 ---
 apiVersion: v1
 kind: Service

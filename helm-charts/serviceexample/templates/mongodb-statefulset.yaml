@@ -20,9 +20,35 @@ spec:
         image: mongo:latest
         ports:
         - containerPort: 27017
+        # TLS Environment Variables for MongoDB
+        env:
+        - name: MONGO_SSL_MODE
+          value: "requireSSL"
+        - name: MONGO_SSL_CA_FILE
+          value: "/etc/ssl/certs/ca.crt"
+        - name: MONGO_SSL_PEM_KEY_FILE
+          value: "/etc/ssl/certs/tls.crt"
+        - name: MONGO_SSL_CA_KEY_FILE
+          value: "/etc/ssl/certs/tls.key"
         volumeMounts:
         - name: mongo-data
           mountPath: /data/db
+        - name: tls-certs
+          mountPath: /etc/ssl/certs
+          readOnly: true
+        command:
+        - mongod
+        - "--bind_ip_all"
+        - "--sslMode"
+        - "requireSSL"
+        - "--sslCAFile"
+        - "/etc/ssl/certs/ca.crt"
+        - "--sslPEMKeyFile"
+        - "/etc/ssl/certs/tls.crt"
+      volumes:
+      - name: tls-certs
+        secret:
+          secretName: mongodb-tls
   volumeClaimTemplates:
   - metadata:
       name: mongo-data
