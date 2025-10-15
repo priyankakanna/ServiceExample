@@ -19,6 +19,23 @@ spec:
       containers:
       - name: redis
         image: redis:alpine
+        command:
+        - sh
+        - -c
+        - |
+          # Create custom config file on persistent storage
+          cat > /data/redis-custom.conf << 'EOL'
+          stop-writes-on-bgsave-error no
+          save ""
+          maxmemory 256mb
+          maxmemory-policy allkeys-lru
+          appendonly no
+          bind 0.0.0.0
+          port 6379
+          dir /data
+          EOL
+          echo "Custom Redis configuration created"
+          exec redis-server /data/redis-custom.conf
         ports:
         - containerPort: 6379
         volumeMounts:
