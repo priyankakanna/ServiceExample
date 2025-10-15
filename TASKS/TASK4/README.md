@@ -55,3 +55,10 @@ Automatically deploy the application whenever a new version is released.
 
 <img width="1813" height="999" alt="image" src="https://github.com/user-attachments/assets/968eaaf6-da5b-4a07-974f-97f6a1131111" />
 
+## Accessing the Application from K8s using URL: http://serviceexample.local:30441/swagger/index.html
+
+### http://serviceexample.local:30441/swagger/index.html
+
+
+<img width="1775" height="1009" alt="image" src="https://github.com/user-attachments/assets/020dd201-9be5-402f-bab1-56d0ea233340" />
+
