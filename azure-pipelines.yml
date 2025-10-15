@@ -36,7 +36,7 @@ steps:
   displayName: 'Build Container Image'
 
 - script: |
-    echo "=== PUSHING TO ACR ==="
+    echo "=== PUSHING TO ACR after fix==="
     podman push serviceexampleacr.azurecr.io/$(IMAGE_NAME):$(TAG)
     echo "✅ Image pushed: serviceexampleacr.azurecr.io/$(IMAGE_NAME):$(TAG)"
   displayName: 'Push Image with Build ID'
