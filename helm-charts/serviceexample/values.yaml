@@ -32,7 +32,7 @@ readinessProbe:
   initialDelaySeconds: 5
   periodSeconds: 5
 
-# Rest of your existing values...
+# App environment variables
 app:
   env:
     ASPNETCORE_ENVIRONMENT: "Production"
@@ -41,6 +41,7 @@ app:
     Aspire__NATS__Net__ConnectionString: "nats://nats:4222"
     Aspire__StackExchange__Redis__ConnectionString: "redis:6379"
 
+# Resources
 resources:
   limits:
     cpu: 500m
@@ -48,3 +49,20 @@ resources:
   requests:
     cpu: 100m
     memory: 256Mi
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 9080
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: ""
+  annotations: {}
+  hosts:
+    - host: serviceexample.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
