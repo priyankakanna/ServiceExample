@@ -23,7 +23,7 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: ["/bin/sh", "-c", "dotnet ServiceExample.dll || sleep infinity"]
+          command: ["dotnet", "ServiceExample.dll"]
           ports:
             - name: http
               containerPort: 9080
@@ -37,13 +37,17 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
             httpGet:
-              path: /api/Person
-              port: 9080
-            initialDelaySeconds: 30
-            periodSeconds: 10
+              path: /health
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /api/Person
-              port: 9080
-            initialDelaySeconds: 5
-            periodSeconds: 5
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 3
