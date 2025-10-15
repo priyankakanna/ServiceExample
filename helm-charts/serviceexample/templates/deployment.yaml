@@ -23,16 +23,12 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.container.command }}
           command: 
-            - sh
-            - -c
-            - |
-              while true; do
-                echo "Starting application..."
-                dotnet ServiceExample.dll
-                echo "Application completed, restarting in 10 seconds..."
-                sleep 10
-              done
+            {{- toYaml .Values.container.command | nindent 12 }}
+          {{- else }}
+          command: ["dotnet", "ServiceExample.dll"]
+          {{- end }}
           ports:
             - name: http
               containerPort: 9080
@@ -44,18 +40,11 @@ spec:
             {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          # TCP socket health check instead of HTTP
+          {{- if .Values.livenessProbe }}
           livenessProbe:
-            tcpSocket:
-              port: 9080
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.readinessProbe }}
           readinessProbe:
-            tcpSocket:
-              port: 9080
-            initialDelaySeconds: 5
-            periodSeconds: 5
-            timeoutSeconds: 3
-            failureThreshold: 1
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          {{- end }}

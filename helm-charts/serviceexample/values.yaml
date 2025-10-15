@@ -1,42 +1,50 @@
-# values.yaml
+# helm-charts/serviceexample/values.yaml
 replicaCount: 1
 
 image:
   repository: serviceexampleacr.azurecr.io/serviceexample
   tag: latest
-  pullPolicy: Always
+  pullPolicy: IfNotPresent
 
-service:
-  type: ClusterIP
-  port: 9080
+# Add container command and health checks
+container:
+  command:
+    - sh
+    - -c
+    - |
+      while true; do
+        echo "Starting application..."
+        dotnet ServiceExample.dll
+        echo "Application completed, restarting in 10 seconds..."
+        sleep 10
+      done
 
-ingress:
-  enabled: true
-  className: "nginx"
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-  hosts:
-    - host: serviceexample.local
-      paths:
-        - path: /
-          pathType: Prefix
+# Health checks
+livenessProbe:
+  tcpSocket:
+    port: 9080
+  initialDelaySeconds: 30
+  periodSeconds: 10
 
-imagePullSecrets:
-  - name: acr-secret
+readinessProbe:
+  tcpSocket:
+    port: 9080
+  initialDelaySeconds: 5
+  periodSeconds: 5
 
-# Environment variables for your application
+# Rest of your existing values...
 app:
   env:
     ASPNETCORE_ENVIRONMENT: "Production"
     ASPNETCORE_URLS: "http://*:9080"
     Aspire__MongoDB__Driver__ConnectionString: "mongodb://mongo:27017"
-    Aspire__StackExchange__Redis__ConnectionString: "redis:6379"
     Aspire__NATS__Net__ConnectionString: "nats://nats:4222"
+    Aspire__StackExchange__Redis__ConnectionString: "redis:6379"
 
 resources:
-  requests:
-    memory: "256Mi"
-    cpu: "100m"
   limits:
-    memory: "512Mi"
-    cpu: "500m"
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
