@@ -23,7 +23,7 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: ["dotnet", "ServiceExample.dll"]
+          command: ["/bin/sh", "-c", "dotnet ServiceExample.dll || sleep infinity"]
           ports:
             - name: http
               containerPort: 9080
