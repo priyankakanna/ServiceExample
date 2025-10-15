@@ -15,7 +15,6 @@ ingress:
   className: "nginx"
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
   hosts:
     - host: serviceexample.local
       paths:
