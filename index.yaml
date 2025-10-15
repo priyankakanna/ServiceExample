@@ -9,9 +9,9 @@ entries:
           image: serviceexampleacr.azurecr.io/serviceexample:latest
     apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-10-15T06:49:18.634899247Z"
+    created: "2025-10-15T06:58:50.681324083Z"
     description: A .NET application with MongoDB, Redis, and NATS using Aspire
-    digest: e6e11ab247b03d53d7978c6764effe7c159f9041f2381d79d563a3d2c085c845
+    digest: dcbd066121b75151503a427145538e518d8989a58768b143d3522c639a15d703
     home: https://github.com/priyankakanna/ServiceExample
     keywords:
     - dotnet
@@ -32,4 +32,4 @@ entries:
     urls:
     - https://priyankakanna.github.io/ServiceExample/helm-repo/serviceexample-0.1.0.tgz
     version: 0.1.0
-generated: "2025-10-15T06:49:18.634267685Z"
+generated: "2025-10-15T06:58:50.680748876Z"
