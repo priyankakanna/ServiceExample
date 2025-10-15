@@ -23,7 +23,16 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: ["dotnet", "ServiceExample.dll"]
+          command: 
+            - sh
+            - -c
+            - |
+              while true; do
+                echo "Starting application..."
+                dotnet ServiceExample.dll
+                echo "Application completed, restarting in 10 seconds..."
+                sleep 10
+              done
           ports:
             - name: http
               containerPort: 9080
@@ -35,4 +44,18 @@ spec:
             {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          # Removed readiness probe - it was checking /health which doesn't exist
+          # TCP socket health check instead of HTTP
+          livenessProbe:
+            tcpSocket:
+              port: 9080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            tcpSocket:
+              port: 9080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 1
