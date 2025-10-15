@@ -1,0 +1,44 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+annotations:
+  artifacthub.io/changes: |
+    - Initial release of ServiceExample Helm chart
+  artifacthub.io/images: |
+    - name: serviceexample
+      image: serviceexampleacr.azurecr.io/serviceexample:latest
+apiVersion: v2
+appVersion: 1.0.0
+description: A .NET application with MongoDB, Redis, and NATS using Aspire
+home: https://github.com/priyankakanna/ServiceExample
+keywords:
+- - dotnet
+- - mongodb
+- - redis
+- - nats
+- - aspire
+- - kubernetes
+- - helm
+maintainers:
+- - email: kannapriyanka.01@gmail.com
+  name: priyankakanna
+  url: https://github.com/priyankakanna
+name: serviceexample
+sources:
+- - https://github.com/priyankakanna/ServiceExample
+type: application
+version: 0.1.0
+
+...
+files:
+  serviceexample-0.1.0.tgz: sha256:678e9f062eb40873ab52e83bbbf73f0442a1d902dc8022b5cdd48cd8044f1d9a
+-----BEGIN PGP SIGNATURE-----
+
+wsBcBAEBCgAQBQJo8AiMCRDnakhcXWmnrAAADgwIAKobzKDlziWQf7PlcnUCoA7t
+srJAM7NEiL+pj+MhaG0WSc69r+OG6djexF9dbORREh3oOa5ykOPyoOJSUoNylHqF
+iD9R9ltMA0Jo6yTtzSiGO9TT9PuSm3ql1STFTR9Ig6OBy+3y28GZr6IbY/fV24OC
+t6AJxcoQyw23jS1vr2VoBHI13qU2qDt2yHw90JwrXVEFUQIn8HUlWO6O/X7U8Tn9
+6F9yoi9nqgrlIw3FcRZzJFczBl9GdhOEKv8EO5AD0Pp3ieH1qIRDFQWZZPA+PNao
+5ng6KgzYdVvzkxHpUIQu5KfxDpCAggq60L3gs/qiZ41CGSDC73yrj3dFRtyO8vI=
+=tq4e
+-----END PGP SIGNATURE-----
